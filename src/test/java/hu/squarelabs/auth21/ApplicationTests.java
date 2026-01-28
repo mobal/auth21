@@ -1,10 +1,10 @@
-package hu.netcode.auth21;
+package hu.squarelabs.auth21;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class Auth21ApplicationTests {
+class ApplicationTests {
 
 	@Test
 	void contextLoads() {
