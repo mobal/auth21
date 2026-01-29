@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
   private static final Logger logger = LogManager.getLogger(GlobalExceptionHandler.class);
 
-  public ProblemDetail handleException(Exception ex) {
+  public ProblemDetail handleException(final Exception ex) {
     logger.error("An unexpected error occurred", ex);
 
     final var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);

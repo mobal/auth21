@@ -37,19 +37,19 @@ class TokenServiceTest {
     @Test
     @DisplayName("should save token entity with JWT token data")
     void shouldSaveTokenEntityWithJwtTokenData() {
-      JwtToken jwtToken = new JwtToken();
+      final JwtToken jwtToken = new JwtToken();
       jwtToken.setJti("test-jti-123");
       jwtToken.setSub("user-123");
       jwtToken.setIat(1000L);
       jwtToken.setExp(4600L);
 
-      Map<String, Object> userData =
+      final Map<String, Object> userData =
           Map.of(
               "id", "user-123",
               "email", "test@example.com");
       jwtToken.setUser(userData);
 
-      String refreshToken = "refresh-token-abc";
+      final String refreshToken = "refresh-token-abc";
 
       tokenService.create(jwtToken, refreshToken);
 
@@ -59,14 +59,14 @@ class TokenServiceTest {
     @Test
     @DisplayName("should set expiration time correctly from JWT token")
     void shouldSetExpirationTimeCorrectly() {
-      JwtToken jwtToken = new JwtToken();
+      final JwtToken jwtToken = new JwtToken();
       jwtToken.setJti("test-jti-123");
       jwtToken.setSub("user-123");
       jwtToken.setIat(1000L);
       jwtToken.setExp(5000L);
       jwtToken.setUser(Map.of("id", "user-123"));
 
-      String refreshToken = "refresh-token-abc";
+      final String refreshToken = "refresh-token-abc";
 
       tokenService.create(jwtToken, refreshToken);
 
@@ -77,14 +77,14 @@ class TokenServiceTest {
     @Test
     @DisplayName("should set user ID from JWT token user data")
     void shouldSetUserIdFromJwtTokenUserData() {
-      JwtToken jwtToken = new JwtToken();
+      final JwtToken jwtToken = new JwtToken();
       jwtToken.setJti("test-jti-123");
       jwtToken.setSub("subject");
       jwtToken.setIat(1000L);
       jwtToken.setExp(5000L);
       jwtToken.setUser(Map.of("id", "user-456"));
 
-      String refreshToken = "refresh-token-abc";
+      final String refreshToken = "refresh-token-abc";
 
       tokenService.create(jwtToken, refreshToken);
 
@@ -95,14 +95,14 @@ class TokenServiceTest {
     @DisplayName("should set user ID from subject when user data is missing")
     void shouldSetUserIdFromSubjectWhenUserDataMissing() {
 
-      JwtToken jwtToken = new JwtToken();
+      final JwtToken jwtToken = new JwtToken();
       jwtToken.setJti("test-jti-123");
       jwtToken.setSub("subject-user");
       jwtToken.setIat(1000L);
       jwtToken.setExp(5000L);
       jwtToken.setUser(null);
 
-      String refreshToken = "refresh-token-abc";
+      final String refreshToken = "refresh-token-abc";
 
       tokenService.create(jwtToken, refreshToken);
 
@@ -118,7 +118,7 @@ class TokenServiceTest {
     @DisplayName("should call repository deleteById with correct JTI")
     void shouldCallRepositoryDeleteByIdWithCorrectJti() {
 
-      String jti = "token-jti-123";
+      final String jti = "token-jti-123";
 
       tokenService.deleteById(jti);
 
@@ -134,16 +134,16 @@ class TokenServiceTest {
     @DisplayName("should return token data when token exists")
     void shouldReturnTokenDataWhenTokenExists() {
 
-      String jti = "token-jti-123";
-      TokenEntity tokenEntity = new TokenEntity();
+      final String jti = "token-jti-123";
+      final TokenEntity tokenEntity = new TokenEntity();
       tokenEntity.setJti(jti);
-      Map<String, Object> jwtTokenMap = Map.of("jti", jti, "sub", "user-123");
+      final Map<String, Object> jwtTokenMap = Map.of("jti", jti, "sub", "user-123");
       tokenEntity.setJwtToken(jwtTokenMap);
       tokenEntity.setRefreshToken("refresh-123");
 
       when(tokenRepository.findById(jti)).thenReturn(Optional.of(tokenEntity));
 
-      Optional<Map<String, Object>> result = tokenService.getById(jti);
+      final Optional<Map<String, Object>> result = tokenService.getById(jti);
 
       assertThat(result).isPresent();
       assertThat(result.get())

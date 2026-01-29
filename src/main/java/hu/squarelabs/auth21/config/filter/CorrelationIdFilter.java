@@ -20,7 +20,9 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(
-      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      final HttpServletRequest request,
+      final HttpServletResponse response,
+      final FilterChain filterChain)
       throws ServletException, IOException {
 
     try {
@@ -36,7 +38,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
   }
 
   private String getOrGenerateCorrelationId(HttpServletRequest request) {
-    String correlationId = request.getHeader(CORRELATION_ID_HEADER);
+    final String correlationId = request.getHeader(CORRELATION_ID_HEADER);
     return (correlationId != null && !correlationId.isBlank())
         ? correlationId
         : UUID.randomUUID().toString();

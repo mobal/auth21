@@ -42,7 +42,7 @@ public class AuthService {
 
   private JwtToken generateToken(String sub, Integer exp, UserEntity user) {
     final var iat = Instant.now();
-    Instant expTime;
+    final Instant expTime;
 
     if (exp == null) {
       expTime = iat.plusSeconds(jwtTokenLifetime);
@@ -50,14 +50,14 @@ public class AuthService {
       expTime = iat.plusSeconds(exp);
     }
 
-    JwtToken jwtToken = new JwtToken();
+    final var jwtToken = new JwtToken();
     jwtToken.setJti(UUID.randomUUID().toString());
     jwtToken.setSub(sub);
     jwtToken.setIat(iat.getEpochSecond());
     jwtToken.setExp(expTime.getEpochSecond());
 
     if (user != null) {
-      Map<String, Object> userData =
+      final var userData =
           Map.of(
               "id", user.getId(),
               "email", user.getEmail(),
@@ -75,7 +75,7 @@ public class AuthService {
     new java.security.SecureRandom().nextBytes(bytes);
 
     final var sb = new StringBuilder();
-    for (byte b : bytes) {
+    for (final byte b : bytes) {
       sb.append(String.format("%02x", b));
     }
     return sb.toString();
@@ -125,7 +125,7 @@ public class AuthService {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, ERROR_MESSAGE_TOKEN_NOT_FOUND);
     }
 
-    Map<String, Object> item = itemOpt.get();
+    final var item = itemOpt.get();
     final var storedToken = (JwtToken) item.get("jwt_token");
 
     if (!jwtToken.equals(storedToken)) {

@@ -21,9 +21,9 @@ public class MapAttributeConverter implements AttributeConverter<Map<String, Obj
       return AttributeValue.builder().nul(true).build();
     }
     try {
-      String jsonString = objectMapper.writeValueAsString(input);
+      final String jsonString = objectMapper.writeValueAsString(input);
       return AttributeValue.builder().s(jsonString).build();
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new RuntimeException("Failed to serialize map to JSON", e);
     }
   }
@@ -38,7 +38,7 @@ public class MapAttributeConverter implements AttributeConverter<Map<String, Obj
     }
     try {
       return objectMapper.readValue(input.s(), Map.class);
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new RuntimeException("Failed to deserialize JSON to map", e);
     }
   }

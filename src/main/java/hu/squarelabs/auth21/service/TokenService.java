@@ -22,10 +22,10 @@ public class TokenService {
   }
 
   public void create(JwtToken jwtToken, String refreshToken) {
-    TokenEntity tokenEntity = new TokenEntity();
+    final var tokenEntity = new TokenEntity();
     tokenEntity.setJti(jwtToken.getJti());
 
-    Map<String, Object> jwtTokenMap = new HashMap<>();
+    final Map<String, Object> jwtTokenMap = new HashMap<>();
     jwtTokenMap.put("jti", jwtToken.getJti());
     jwtTokenMap.put("sub", jwtToken.getSub());
     jwtTokenMap.put("iat", jwtToken.getIat());
@@ -56,7 +56,7 @@ public class TokenService {
         .findById(jti)
         .map(
             entity -> {
-              Map<String, Object> result = new HashMap<>();
+              final Map<String, Object> result = new HashMap<>();
               result.put("jwt_token", entity.getJwtToken());
               result.put("refresh_token", entity.getRefreshToken());
               return result;
@@ -68,7 +68,7 @@ public class TokenService {
         .findByRefreshToken(refreshToken)
         .map(
             entity -> {
-              Map<String, Object> result = new HashMap<>();
+              final Map<String, Object> result = new HashMap<>();
               result.put("jwt_token", entity.getJwtToken());
               result.put("refresh_token", entity.getRefreshToken());
               return result;
