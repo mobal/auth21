@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -33,11 +34,13 @@ class AuthServiceTest {
 
   @Mock private TokenService tokenService;
 
+  @Mock private PasswordEncoder passwordEncoder;
+
   private AuthService authService;
 
   @BeforeEach
   void setUp() {
-    authService = new AuthService(userRepository, tokenRepository, tokenService);
+    authService = new AuthService(userRepository, tokenRepository, tokenService, passwordEncoder);
     ReflectionTestUtils.setField(authService, "jwtSecret", "test-secret");
     ReflectionTestUtils.setField(authService, "jwtTokenLifetime", 3600);
   }

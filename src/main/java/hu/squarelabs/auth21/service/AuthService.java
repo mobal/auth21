@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,6 +20,7 @@ public class AuthService {
   private final UserRepository userRepository;
   private final TokenRepository tokenRepository;
   private final TokenService tokenService;
+  private final PasswordEncoder passwordEncoder;
 
   private static final Logger logger = LogManager.getLogger(AuthService.class);
 
@@ -34,10 +36,14 @@ public class AuthService {
   private static final String ERROR_MESSAGE_USER_NOT_FOUND = "The requested user was not found";
 
   public AuthService(
-      UserRepository userRepository, TokenRepository tokenRepository, TokenService tokenService) {
+      UserRepository userRepository,
+      TokenRepository tokenRepository,
+      TokenService tokenService,
+      PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.tokenRepository = tokenRepository;
     this.tokenService = tokenService;
+    this.passwordEncoder = passwordEncoder;
   }
 
   private JwtToken generateToken(String sub, Integer exp, UserEntity user) {
@@ -140,7 +146,11 @@ public class AuthService {
   }
 
   private boolean verifyPassword(String password, String passwordHash) {
-    return false;
+    return passwordEncoder.matches(password, passwordHash);
+  }
+
+  public String encodePassword(String password) {
+    return passwordEncoder.encode(password);
   }
 
   private String encodeJwt(JwtToken jwtToken) {
