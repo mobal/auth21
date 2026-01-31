@@ -1,7 +1,6 @@
 package hu.squarelabs.auth21.model;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class JwtToken {
   private String jti;
@@ -58,23 +57,6 @@ public class JwtToken {
 
   public void setUser(Map<String, Object> user) {
     this.user = user;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    JwtToken jwtToken = (JwtToken) o;
-    return Objects.equals(jti, jwtToken.jti)
-        && Objects.equals(sub, jwtToken.sub)
-        && Objects.equals(iat, jwtToken.iat)
-        && Objects.equals(exp, jwtToken.exp)
-        && Objects.equals(user, jwtToken.user);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(jti, sub, iat, exp, user);
   }
 
   @Override

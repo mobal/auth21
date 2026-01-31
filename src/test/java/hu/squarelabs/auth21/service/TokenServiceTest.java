@@ -116,7 +116,7 @@ class TokenServiceTest {
 
     @Test
     @DisplayName("should call repository deleteById with correct JTI")
-    void shouldCallRepositoryDeleteByIdWithCorrectJti() {
+    void shouldCallRepositoryDeleteByIdWithCorrectJti() throws Exception {
 
       final String jti = "token-jti-123";
 
@@ -132,7 +132,7 @@ class TokenServiceTest {
 
     @Test
     @DisplayName("should return token data when token exists")
-    void shouldReturnTokenDataWhenTokenExists() {
+    void shouldReturnTokenDataWhenTokenExists() throws Exception {
 
       final String jti = "token-jti-123";
       final TokenEntity tokenEntity = new TokenEntity();
@@ -154,7 +154,7 @@ class TokenServiceTest {
 
     @Test
     @DisplayName("should return empty optional when token does not exist")
-    void shouldReturnEmptyOptionalWhenTokenNotFound() {
+    void shouldReturnEmptyOptionalWhenTokenNotFound() throws Exception {
 
       String jti = "non-existent-jti";
       when(tokenRepository.findById(jti)).thenReturn(Optional.empty());
@@ -171,34 +171,45 @@ class TokenServiceTest {
 
     @Test
     @DisplayName("should return token data when refresh token exists")
-    void shouldReturnTokenDataWhenRefreshTokenExists() {
+    void shouldReturnTokenDataWhenRefreshTokenExists() throws Exception {
 
       String refreshToken = "refresh-abc-123";
       TokenEntity tokenEntity = new TokenEntity();
       tokenEntity.setJti("jti-123");
-      Map<String, Object> jwtTokenMap = Map.of("jti", "jti-123", "sub", "user-123");
+      Map<String, Object> jwtTokenMap =
+          Map.of(
+              "jti",
+              "jti-123",
+              "sub",
+              "user-123",
+              "iat",
+              1L,
+              "exp",
+              3601L,
+              "user",
+              Map.of("id", "user-123"));
       tokenEntity.setJwtToken(jwtTokenMap);
       tokenEntity.setRefreshToken(refreshToken);
 
       when(tokenRepository.findByRefreshToken(refreshToken)).thenReturn(Optional.of(tokenEntity));
 
-      Optional<Map<String, Object>> result = tokenService.getByRefreshToken(refreshToken);
+      var result = tokenService.getByRefreshToken(refreshToken);
 
       assertThat(result).isPresent();
-      assertThat(result.get())
-          .containsKeys("jwt_token", "refresh_token")
-          .containsEntry("jwt_token", jwtTokenMap)
-          .containsEntry("refresh_token", refreshToken);
+      var pair = result.get();
+      assertThat(pair.getLeft()).isNotNull();
+      assertThat(pair.getLeft().getJti()).isEqualTo("jti-123");
+      assertThat(pair.getRight()).isEqualTo(refreshToken);
     }
 
     @Test
     @DisplayName("should return empty optional when refresh token does not exist")
-    void shouldReturnEmptyOptionalWhenRefreshTokenNotFound() {
+    void shouldReturnEmptyOptionalWhenRefreshTokenNotFound() throws Exception {
 
       String refreshToken = "non-existent-refresh";
       when(tokenRepository.findByRefreshToken(refreshToken)).thenReturn(Optional.empty());
 
-      Optional<Map<String, Object>> result = tokenService.getByRefreshToken(refreshToken);
+      var result = tokenService.getByRefreshToken(refreshToken);
 
       assertThat(result).isEmpty();
     }

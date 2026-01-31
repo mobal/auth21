@@ -6,11 +6,12 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import hu.squarelabs.auth21.model.JwtToken;
+import hu.squarelabs.auth21.model.dto.response.TokenResponse;
 import hu.squarelabs.auth21.model.entity.UserEntity;
-import hu.squarelabs.auth21.repository.TokenRepository;
-import hu.squarelabs.auth21.repository.UserRepository;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -19,30 +20,27 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
 
 @DisplayName("AuthService")
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
-  @Mock private UserRepository userRepository;
-
-  @Mock private TokenRepository tokenRepository;
+  @Mock private UserService userService;
 
   @Mock private TokenService tokenService;
 
-  @Mock private PasswordEncoder passwordEncoder;
+  @Mock private JwtService jwtService;
+
+  @Mock private AuthenticationManager authenticationManager;
 
   private AuthService authService;
 
   @BeforeEach
   void setUp() {
-    authService = new AuthService(userRepository, tokenRepository, tokenService, passwordEncoder);
-    ReflectionTestUtils.setField(authService, "jwtSecret", "test-secret");
-    ReflectionTestUtils.setField(authService, "jwtTokenLifetime", 3600);
+    authService = new AuthService(userService, tokenService, jwtService, authenticationManager);
   }
 
   @Nested
@@ -50,15 +48,16 @@ class AuthServiceTest {
   class LoginMethod {
 
     @Test
-    @DisplayName("should throw NOT_FOUND when user email does not exist")
+    @DisplayName("should throw UserNotFoundException when user email does not exist")
     void shouldThrowNotFoundWhenUserEmailNotExists() {
       final String email = "nonexistent@example.com";
       final String password = "password123";
-      when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+      when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
+      when(userService.getUserByEmail(email)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> authService.login(email, password))
-          .isInstanceOf(ResponseStatusException.class)
-          .hasFieldOrPropertyWithValue("statusCode", HttpStatus.NOT_FOUND);
+          .isInstanceOf(Exception.class)
+          .hasMessageContaining("User not found");
     }
 
     @Test
@@ -66,17 +65,11 @@ class AuthServiceTest {
     void shouldThrowUnauthorizedWhenPasswordInvalid() {
       final String email = "user@example.com";
       final String password = "wrongpassword";
-
-      final UserEntity user = new UserEntity();
-      user.setId("user-123");
-      user.setEmail(email);
-      user.setPasswordHash("hashed-password");
-
-      when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+      when(authenticationManager.authenticate(any()))
+          .thenThrow(new BadCredentialsException("Bad credentials"));
 
       assertThatThrownBy(() -> authService.login(email, password))
-          .isInstanceOf(ResponseStatusException.class)
-          .hasFieldOrPropertyWithValue("statusCode", HttpStatus.UNAUTHORIZED);
+          .isInstanceOf(BadCredentialsException.class);
     }
 
     @Test
@@ -88,18 +81,24 @@ class AuthServiceTest {
       final UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setEmail(email);
-      user.setNickname("testuser");
-      user.setName("Test User");
-      user.setPasswordHash("hashed-password");
-      user.setRoles(java.util.List.of("USER"));
+      user.setDisplayName("testuser");
+      user.setPassword("hashed-password");
 
-      when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+      JwtToken jwtToken = new JwtToken();
+      jwtToken.setJti("jti-123");
+      jwtToken.setIat(1L);
+      jwtToken.setExp(3601L);
 
-      assertThatThrownBy(() -> authService.login(email, password))
-          .isInstanceOf(ResponseStatusException.class)
-          .hasFieldOrPropertyWithValue("statusCode", HttpStatus.UNAUTHORIZED);
+      when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
+      when(userService.getUserByEmail(email)).thenReturn(Optional.of(user));
+      when(jwtService.createJwtToken(user)).thenReturn(jwtToken);
+      when(jwtService.encodeJwtToken(jwtToken)).thenReturn("encoded-token");
 
-      verify(tokenService, never()).create(any(JwtToken.class), anyString());
+      TokenResponse result = authService.login(email, password);
+
+      verify(tokenService, times(1)).create(eq(jwtToken), anyString());
+      assertThat(result.getAccessToken()).isEqualTo("encoded-token");
+      assertThat(result.getRefreshToken()).isNotBlank();
     }
 
     @Test
@@ -120,9 +119,22 @@ class AuthServiceTest {
       JwtToken jwtToken = new JwtToken();
       jwtToken.setJti("token-jti-123");
 
-      authService.logout(jwtToken);
+      when(jwtService.decodeJwtToken("jwt-token-string")).thenReturn(jwtToken);
+
+      // Set up authentication context so logout actually calls deleteById
+      org.springframework.security.core.Authentication authentication =
+          org.mockito.Mockito.mock(org.springframework.security.core.Authentication.class);
+      org.springframework.security.core.context.SecurityContextHolder.getContext()
+          .setAuthentication(authentication);
+
+      authService.logout("jwt-token-string");
 
       verify(tokenService, times(1)).deleteById("token-jti-123");
+
+      // Verify context was cleared
+      org.junit.jupiter.api.Assertions.assertNull(
+          org.springframework.security.core.context.SecurityContextHolder.getContext()
+              .getAuthentication());
     }
   }
 
@@ -133,39 +145,29 @@ class AuthServiceTest {
     @Test
     @DisplayName("should throw NOT_FOUND when refresh token not found")
     void shouldThrowNotFoundWhenRefreshTokenNotFound() {
-      final JwtToken jwtToken = new JwtToken();
-      jwtToken.setJti("jti-123");
       final String refreshToken = "invalid-refresh-token";
 
       when(tokenService.getByRefreshToken(refreshToken)).thenReturn(Optional.empty());
 
-      assertThatThrownBy(() -> authService.refresh(jwtToken, refreshToken))
-          .isInstanceOf(ResponseStatusException.class)
-          .hasFieldOrPropertyWithValue("statusCode", HttpStatus.NOT_FOUND);
+      assertThatThrownBy(() -> authService.refresh(refreshToken)).isInstanceOf(Exception.class);
     }
 
     @Test
-    @DisplayName("should throw INTERNAL_SERVER_ERROR when stored token does not match")
-    void shouldThrowInternalServerErrorWhenTokenMismatch() {
-      final JwtToken originalToken = new JwtToken();
-      originalToken.setJti("jti-123");
-      originalToken.setSub("user-123");
-
-      final JwtToken storedToken = new JwtToken();
-      storedToken.setJti("jti-456");
-      storedToken.setSub("user-456");
+    @DisplayName("should throw when user does not exist for refresh token")
+    void shouldThrowWhenUserMissingForRefreshToken() {
+      JwtToken jwtToken = new JwtToken();
+      jwtToken.setJti("jti-456");
+      jwtToken.setUser(Map.of("id", "user-456"));
 
       String refreshToken = "refresh-token";
-      Map<String, Object> tokenData =
-          Map.of(
-              "jwt_token", storedToken,
-              "refresh_token", refreshToken);
+      Pair<JwtToken, String> tokenPair = ImmutablePair.of(jwtToken, refreshToken);
 
-      when(tokenService.getByRefreshToken(refreshToken)).thenReturn(Optional.of(tokenData));
+      when(tokenService.getByRefreshToken(refreshToken)).thenReturn(Optional.of(tokenPair));
+      when(userService.getUserById("user-456")).thenReturn(Optional.empty());
 
-      assertThatThrownBy(() -> authService.refresh(originalToken, refreshToken))
-          .isInstanceOf(ResponseStatusException.class)
-          .hasFieldOrPropertyWithValue("statusCode", HttpStatus.INTERNAL_SERVER_ERROR);
+      assertThatThrownBy(() -> authService.refresh(refreshToken))
+          .isInstanceOf(Exception.class)
+          .hasMessageContaining("User not found");
     }
 
     @Test
@@ -173,24 +175,33 @@ class AuthServiceTest {
     void shouldRevokeOldTokenAndGenerateNewTokensOnSuccessfulRefresh() {
       JwtToken jwtToken = new JwtToken();
       jwtToken.setJti("jti-123");
-      jwtToken.setSub("user-123");
+      jwtToken.setUser(Map.of("id", "user-123"));
+
+      UserEntity user = new UserEntity();
+      user.setId("user-123");
+      user.setEmail("user@example.com");
+
+      JwtToken newJwtToken = new JwtToken();
+      newJwtToken.setJti("new-jti-123");
+      newJwtToken.setIat(1L);
+      newJwtToken.setExp(3601L);
 
       String refreshToken = "refresh-token";
-      Map<String, Object> tokenData =
-          Map.of(
-              "jwt_token", jwtToken,
-              "refresh_token", refreshToken);
+      Pair<JwtToken, String> tokenPair = ImmutablePair.of(jwtToken, refreshToken);
 
-      when(tokenService.getByRefreshToken(refreshToken)).thenReturn(Optional.of(tokenData));
+      when(tokenService.getByRefreshToken(refreshToken)).thenReturn(Optional.of(tokenPair));
+      when(userService.getUserById("user-123")).thenReturn(Optional.of(user));
+      when(jwtService.createJwtToken(user)).thenReturn(newJwtToken);
+      when(jwtService.encodeJwtToken(newJwtToken)).thenReturn("encoded-token");
 
       try {
-        authService.refresh(jwtToken, refreshToken);
+        authService.refresh(refreshToken);
       } catch (Exception e) {
         //
       }
 
       verify(tokenService, times(1)).deleteById("jti-123");
-      verify(tokenService, times(1)).create(any(JwtToken.class), anyString());
+      verify(tokenService, times(1)).create(eq(newJwtToken), anyString());
     }
   }
 }

@@ -1,23 +1,16 @@
 package hu.squarelabs.auth21.controller;
 
+import hu.squarelabs.auth21.model.dto.request.LoginRequest;
+import hu.squarelabs.auth21.model.dto.request.RefreshRequest;
 import hu.squarelabs.auth21.model.dto.response.TokenResponse;
 import hu.squarelabs.auth21.service.AuthService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping(
-    consumes = {MediaType.ALL_VALUE},
-    produces = {MediaType.APPLICATION_JSON_VALUE},
-    value = "/api/v1/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
-  private static final Logger logger = LogManager.getLogger(AuthController.class);
 
   private final AuthService authService;
 
@@ -26,26 +19,19 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  @ResponseStatus(value = HttpStatus.OK)
-  public TokenResponse login() {
-    logger.info("Login request received");
-
-    return new TokenResponse("dummy-access-token", "dummy-refresh-token", 3600L);
+  public TokenResponse login(@Valid @RequestBody LoginRequest request) {
+    return authService.login(request.getEmail(), request.getPassword());
   }
 
-  @PostMapping("/refresh-token")
-  @ResponseStatus(value = HttpStatus.OK)
-  public TokenResponse refreshToken() {
-    logger.info("Refresh token request received");
-
-    return new TokenResponse("dummy-access-token", "dummy-refresh-token", 3600L);
+  @PostMapping("/refresh")
+  public TokenResponse refresh(@Valid @RequestBody RefreshRequest request)
+      throws ResponseStatusException {
+    return authService.refresh(request.getRefreshToken());
   }
 
-  @PostMapping("/register")
-  @ResponseStatus(value = HttpStatus.OK)
-  public TokenResponse register() {
-    logger.info("Register request received");
-
-    return new TokenResponse("dummy-access-token", "dummy-refresh-token", 3600L);
+  @GetMapping("/logout")
+  public void logout(@RequestHeader("Authorization") String authorizationHeader)
+      throws ResponseStatusException {
+    authService.logout(authorizationHeader.replace("Bearer ", ""));
   }
 }

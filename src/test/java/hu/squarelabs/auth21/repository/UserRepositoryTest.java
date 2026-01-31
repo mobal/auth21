@@ -47,7 +47,6 @@ class UserRepositoryTest {
       final UserEntity user = new UserEntity();
       user.setId(userId);
       user.setEmail("test@example.com");
-      user.setName("Test User");
 
       when(userTable.getItem(any(Key.class))).thenReturn(user);
 
@@ -113,7 +112,6 @@ class UserRepositoryTest {
       final UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setEmail(email);
-      user.setName("Test User");
 
       ArgumentCaptor<ScanEnhancedRequest> captor =
           ArgumentCaptor.forClass(ScanEnhancedRequest.class);

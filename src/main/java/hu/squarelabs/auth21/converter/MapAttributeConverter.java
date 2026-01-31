@@ -3,7 +3,6 @@ package hu.squarelabs.auth21.converter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeValueType;
@@ -12,8 +11,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 @Component
 public class MapAttributeConverter implements AttributeConverter<Map<String, Object>> {
-
-  @Autowired private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Override
   public AttributeValue transformFrom(Map<String, Object> input) {

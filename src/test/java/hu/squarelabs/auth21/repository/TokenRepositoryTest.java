@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -112,7 +113,7 @@ class TokenRepositoryTest {
 
     @Test
     @DisplayName("should return token when token exists")
-    void shouldReturnTokenWhenTokenExists() {
+    void shouldReturnTokenWhenTokenExists() throws Exception {
       final String jti = "test-jti-123";
       final TokenEntity token = new TokenEntity();
       token.setJti(jti);
@@ -130,7 +131,7 @@ class TokenRepositoryTest {
 
     @Test
     @DisplayName("should return empty optional when token does not exist")
-    void shouldReturnEmptyOptionalWhenTokenDoesNotExist() {
+    void shouldReturnEmptyOptionalWhenTokenDoesNotExist() throws Exception {
       final String jti = "non-existent-jti";
 
       when(tokenTable.getItem(any(Key.class))).thenReturn(null);
@@ -149,7 +150,7 @@ class TokenRepositoryTest {
       when(tokenTable.getItem(any(Key.class))).thenThrow(new RuntimeException("DynamoDB error"));
 
       assertThatThrownBy(() -> tokenRepository.findById(jti))
-          .isInstanceOf(RuntimeException.class)
+          .isInstanceOf(ResponseStatusException.class)
           .hasMessageContaining("Error finding token by jti");
     }
   }
@@ -160,7 +161,7 @@ class TokenRepositoryTest {
 
     @Test
     @DisplayName("should delete token by jti")
-    void shouldDeleteTokenByJti() {
+    void shouldDeleteTokenByJti() throws Exception {
       final String jti = "test-jti-123";
 
       tokenRepository.deleteById(jti);
@@ -176,7 +177,7 @@ class TokenRepositoryTest {
       doThrow(new RuntimeException("DynamoDB error")).when(tokenTable).deleteItem(any(Key.class));
 
       assertThatThrownBy(() -> tokenRepository.deleteById(jti))
-          .isInstanceOf(RuntimeException.class)
+          .isInstanceOf(ResponseStatusException.class)
           .hasMessageContaining("Error deleting token");
     }
   }
@@ -194,7 +195,7 @@ class TokenRepositoryTest {
           .thenThrow(new RuntimeException("Index not found"));
 
       assertThatThrownBy(() -> tokenRepository.findByRefreshToken(refreshToken))
-          .isInstanceOf(RuntimeException.class);
+          .isInstanceOf(ResponseStatusException.class);
 
       verify(tokenTable, times(1)).index("RefreshTokenIndex");
     }
@@ -207,7 +208,7 @@ class TokenRepositoryTest {
       when(tokenTable.index(anyString())).thenThrow(new RuntimeException("DynamoDB error"));
 
       assertThatThrownBy(() -> tokenRepository.findByRefreshToken(refreshToken))
-          .isInstanceOf(RuntimeException.class)
+          .isInstanceOf(ResponseStatusException.class)
           .hasMessageContaining("Error finding token by refresh token");
     }
 
@@ -219,7 +220,7 @@ class TokenRepositoryTest {
       when(tokenTable.index(anyString())).thenThrow(new RuntimeException("Mock error"));
 
       assertThatThrownBy(() -> tokenRepository.findByRefreshToken(refreshToken))
-          .isInstanceOf(RuntimeException.class);
+          .isInstanceOf(ResponseStatusException.class);
 
       verify(tokenTable).index("RefreshTokenIndex");
     }

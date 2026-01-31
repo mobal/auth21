@@ -1,20 +1,18 @@
 package hu.squarelabs.auth21.model.entity;
 
 import java.time.Instant;
-import java.util.List;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 @DynamoDbBean
 public class UserEntity {
   private String id;
   private String email;
-  private String passwordHash;
-  private String nickname;
-  private String name;
+  private String password;
+  private String username;
+  private String displayName;
   private Instant createdAt;
   private Instant updatedAt;
   private Instant deletedAt;
-  private List<String> roles;
 
   @DynamoDbPartitionKey
   @DynamoDbAttribute("id")
@@ -36,31 +34,31 @@ public class UserEntity {
     this.email = email;
   }
 
-  @DynamoDbAttribute("password_hash")
-  public String getPasswordHash() {
-    return passwordHash;
+  @DynamoDbAttribute("password")
+  public String getPassword() {
+    return password;
   }
 
-  public void setPasswordHash(String passwordHash) {
-    this.passwordHash = passwordHash;
+  public void setPassword(String passwordHash) {
+    this.password = passwordHash;
   }
 
-  @DynamoDbAttribute("nickname")
-  public String getNickname() {
-    return nickname;
+  @DynamoDbAttribute("username")
+  public String getUsername() {
+    return username;
   }
 
-  public void setNickname(String nickname) {
-    this.nickname = nickname;
+  public void setUsername(String username) {
+    this.username = username;
   }
 
-  @DynamoDbAttribute("name")
-  public String getName() {
-    return name;
+  @DynamoDbAttribute("display_name")
+  public String getDisplayName() {
+    return displayName;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
   }
 
   @DynamoDbAttribute("created_at")
@@ -88,14 +86,5 @@ public class UserEntity {
 
   public void setDeletedAt(Instant deletedAt) {
     this.deletedAt = deletedAt;
-  }
-
-  @DynamoDbAttribute("roles")
-  public List<String> getRoles() {
-    return roles;
-  }
-
-  public void setRoles(List<String> roles) {
-    this.roles = roles;
   }
 }
