@@ -57,7 +57,7 @@ dependencies {
 
     implementation 'de.mkammerer:argon2-jvm:2.11'
     
-    // developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.mockito:mockito-core'

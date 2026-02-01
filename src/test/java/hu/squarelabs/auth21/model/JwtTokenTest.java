@@ -27,11 +27,11 @@ class JwtTokenTest {
 
       final JwtToken token = new JwtToken(jti, sub, iat, exp, user);
 
-      assertThat(token.getJti()).isEqualTo(jti);
-      assertThat(token.getSub()).isEqualTo(sub);
-      assertThat(token.getIat()).isEqualTo(iat);
-      assertThat(token.getExp()).isEqualTo(exp);
-      assertThat(token.getUser()).isEqualTo(user);
+      assertThat(token.jti()).isEqualTo(jti);
+      assertThat(token.sub()).isEqualTo(sub);
+      assertThat(token.iat()).isEqualTo(iat);
+      assertThat(token.exp()).isEqualTo(exp);
+      assertThat(token.user()).isEqualTo(user);
     }
 
     @Test
@@ -39,58 +39,7 @@ class JwtTokenTest {
     void shouldHandleNullUserMap() {
       final JwtToken token = new JwtToken("jti", "sub", 1000L, 2000L, null);
 
-      assertThat(token.getUser()).isNull();
-    }
-  }
-
-  @Nested
-  @DisplayName("Getters and Setters")
-  class GettersAndSetters {
-
-    @Test
-    @DisplayName("should get and set jti")
-    void shouldGetAndSetJti() {
-      final JwtToken token = new JwtToken();
-      token.setJti("my-jti");
-
-      assertThat(token.getJti()).isEqualTo("my-jti");
-    }
-
-    @Test
-    @DisplayName("should get and set sub")
-    void shouldGetAndSetSub() {
-      final JwtToken token = new JwtToken();
-      token.setSub("user-123");
-
-      assertThat(token.getSub()).isEqualTo("user-123");
-    }
-
-    @Test
-    @DisplayName("should get and set iat")
-    void shouldGetAndSetIat() {
-      final JwtToken token = new JwtToken();
-      token.setIat(1000L);
-
-      assertThat(token.getIat()).isEqualTo(1000L);
-    }
-
-    @Test
-    @DisplayName("should get and set exp")
-    void shouldGetAndSetExp() {
-      final JwtToken token = new JwtToken();
-      token.setExp(2000L);
-
-      assertThat(token.getExp()).isEqualTo(2000L);
-    }
-
-    @Test
-    @DisplayName("should get and set user")
-    void shouldGetAndSetUser() {
-      final JwtToken token = new JwtToken();
-      final Map<String, Object> user = Map.of("id", "user-123", "email", "user@example.com");
-      token.setUser(user);
-
-      assertThat(token.getUser()).isEqualTo(user);
+      assertThat(token.user()).isNull();
     }
   }
 
@@ -101,16 +50,11 @@ class JwtTokenTest {
     @Test
     @DisplayName("should be equal for same field values")
     void shouldBeEqualForSameFieldValues() {
-      // JwtToken doesn't override equals(), so this test compares field values instead
       final Map<String, Object> user = Map.of("id", "user-123");
       final JwtToken token1 = new JwtToken("jti", "sub", 1000L, 2000L, user);
       final JwtToken token2 = new JwtToken("jti", "sub", 1000L, 2000L, user);
 
-      assertThat(token1.getJti()).isEqualTo(token2.getJti());
-      assertThat(token1.getSub()).isEqualTo(token2.getSub());
-      assertThat(token1.getIat()).isEqualTo(token2.getIat());
-      assertThat(token1.getExp()).isEqualTo(token2.getExp());
-      assertThat(token1.getUser()).isEqualTo(token2.getUser());
+      assertThat(token1).isEqualTo(token2);
     }
 
     @Test
@@ -186,15 +130,11 @@ class JwtTokenTest {
     @Test
     @DisplayName("should have same hash code for equal objects")
     void shouldHaveSameHashCodeForEqualObjects() {
-      // JwtToken doesn't override hashCode(), so instances with same fields won't have same
-      // hashCode
-      // Instead verify each instance has a hashCode
       final Map<String, Object> user = Map.of("id", "user-123");
       final JwtToken token1 = new JwtToken("jti", "sub", 1000L, 2000L, user);
       final JwtToken token2 = new JwtToken("jti", "sub", 1000L, 2000L, user);
 
-      assertThat(token1.hashCode()).isNotZero();
-      assertThat(token2.hashCode()).isNotZero();
+      assertThat(token1.hashCode()).isEqualTo(token2.hashCode());
     }
 
     @Test
@@ -238,34 +178,6 @@ class JwtTokenTest {
       final String toString = token.toString();
 
       assertThat(toString).containsAnyOf("jti", "sub", "my-jti", "my-sub");
-    }
-  }
-
-  @Nested
-  @DisplayName("No-arg constructor")
-  class NoArgConstructor {
-
-    @Test
-    @DisplayName("should create instance with no-arg constructor")
-    void shouldCreateInstanceWithNoArgConstructor() {
-      final JwtToken token = new JwtToken();
-
-      assertThat(token).isNotNull();
-    }
-
-    @Test
-    @DisplayName("should allow field setting with no-arg constructor")
-    void shouldAllowFieldSettingWithNoArgConstructor() {
-      final JwtToken token = new JwtToken();
-      token.setJti("jti");
-      token.setSub("sub");
-      token.setIat(1000L);
-      token.setExp(2000L);
-
-      assertThat(token.getJti()).isEqualTo("jti");
-      assertThat(token.getSub()).isEqualTo("sub");
-      assertThat(token.getIat()).isEqualTo(1000L);
-      assertThat(token.getExp()).isEqualTo(2000L);
     }
   }
 }

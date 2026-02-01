@@ -37,17 +37,11 @@ class TokenServiceTest {
     @Test
     @DisplayName("should save token entity with JWT token data")
     void shouldSaveTokenEntityWithJwtTokenData() {
-      final JwtToken jwtToken = new JwtToken();
-      jwtToken.setJti("test-jti-123");
-      jwtToken.setSub("user-123");
-      jwtToken.setIat(1000L);
-      jwtToken.setExp(4600L);
-
       final Map<String, Object> userData =
           Map.of(
               "id", "user-123",
               "email", "test@example.com");
-      jwtToken.setUser(userData);
+      final JwtToken jwtToken = new JwtToken("test-jti-123", "user-123", 1000L, 4600L, userData);
 
       final String refreshToken = "refresh-token-abc";
 
@@ -59,12 +53,8 @@ class TokenServiceTest {
     @Test
     @DisplayName("should set expiration time correctly from JWT token")
     void shouldSetExpirationTimeCorrectly() {
-      final JwtToken jwtToken = new JwtToken();
-      jwtToken.setJti("test-jti-123");
-      jwtToken.setSub("user-123");
-      jwtToken.setIat(1000L);
-      jwtToken.setExp(5000L);
-      jwtToken.setUser(Map.of("id", "user-123"));
+      final JwtToken jwtToken =
+          new JwtToken("test-jti-123", "user-123", 1000L, 5000L, Map.of("id", "user-123"));
 
       final String refreshToken = "refresh-token-abc";
 
@@ -77,12 +67,8 @@ class TokenServiceTest {
     @Test
     @DisplayName("should set user ID from JWT token user data")
     void shouldSetUserIdFromJwtTokenUserData() {
-      final JwtToken jwtToken = new JwtToken();
-      jwtToken.setJti("test-jti-123");
-      jwtToken.setSub("subject");
-      jwtToken.setIat(1000L);
-      jwtToken.setExp(5000L);
-      jwtToken.setUser(Map.of("id", "user-456"));
+      final JwtToken jwtToken =
+          new JwtToken("test-jti-123", "subject", 1000L, 5000L, Map.of("id", "user-456"));
 
       final String refreshToken = "refresh-token-abc";
 
@@ -95,12 +81,7 @@ class TokenServiceTest {
     @DisplayName("should set user ID from subject when user data is missing")
     void shouldSetUserIdFromSubjectWhenUserDataMissing() {
 
-      final JwtToken jwtToken = new JwtToken();
-      jwtToken.setJti("test-jti-123");
-      jwtToken.setSub("subject-user");
-      jwtToken.setIat(1000L);
-      jwtToken.setExp(5000L);
-      jwtToken.setUser(null);
+      final JwtToken jwtToken = new JwtToken("test-jti-123", "subject-user", 1000L, 5000L, null);
 
       final String refreshToken = "refresh-token-abc";
 
@@ -198,7 +179,7 @@ class TokenServiceTest {
       assertThat(result).isPresent();
       var pair = result.get();
       assertThat(pair.getLeft()).isNotNull();
-      assertThat(pair.getLeft().getJti()).isEqualTo("jti-123");
+      assertThat(pair.getLeft().jti()).isEqualTo("jti-123");
       assertThat(pair.getRight()).isEqualTo(refreshToken);
     }
 

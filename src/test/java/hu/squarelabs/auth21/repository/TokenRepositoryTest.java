@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import hu.squarelabs.auth21.config.DynamoDbTableSchemaConfig;
 import hu.squarelabs.auth21.model.entity.TokenEntity;
 import java.time.Instant;
 import java.util.Map;
@@ -15,25 +16,32 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 
 @DisplayName("TokenRepository")
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@ContextConfiguration(classes = DynamoDbTableSchemaConfig.class)
 class TokenRepositoryTest {
 
   @Mock private DynamoDbEnhancedClient enhancedClient;
 
   @Mock private DynamoDbTable<TokenEntity> tokenTable;
 
+  @Autowired private TableSchema<TokenEntity> tokenEntityTableSchema;
+
   private TokenRepository tokenRepository;
 
   @BeforeEach
   void setUp() {
     when(enhancedClient.table(eq("auth-tokens"), any())).thenReturn((DynamoDbTable) tokenTable);
-    tokenRepository = new TokenRepository(enhancedClient, "auth-tokens");
+    tokenRepository = new TokenRepository(enhancedClient, tokenEntityTableSchema, "auth-tokens");
   }
 
   @Nested

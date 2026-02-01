@@ -95,40 +95,36 @@ public class JwtService {
     userData.put("email", user.getEmail());
     userData.put("nickname", user.getDisplayName());
 
-    JwtToken jwtToken = new JwtToken();
-    jwtToken.setJti(java.util.UUID.randomUUID().toString());
-    jwtToken.setSub(user.getId());
-    jwtToken.setIat(now.getEpochSecond());
-    jwtToken.setExp(exp.getEpochSecond());
-    jwtToken.setUser(userData);
-
-    return jwtToken;
+    return new JwtToken(
+        java.util.UUID.randomUUID().toString(),
+        user.getId(),
+        now.getEpochSecond(),
+        exp.getEpochSecond(),
+        userData);
   }
 
   public JwtToken decodeJwtToken(String token) {
     Claims claims = extractAllClaims(token);
 
-    JwtToken jwtToken = new JwtToken();
-    jwtToken.setJti(claims.getId());
-    jwtToken.setSub(claims.getSubject());
-    jwtToken.setIat(claims.getIssuedAt().toInstant().getEpochSecond());
-    jwtToken.setExp(claims.getExpiration().toInstant().getEpochSecond());
-    jwtToken.setUser(claims.get("user", Map.class));
-
-    return jwtToken;
+    return new JwtToken(
+        claims.getId(),
+        claims.getSubject(),
+        claims.getIssuedAt().toInstant().getEpochSecond(),
+        claims.getExpiration().toInstant().getEpochSecond(),
+        claims.get("user", Map.class));
   }
 
   public String encodeJwtToken(JwtToken jwtToken) {
     Map<String, Object> claims = new HashMap<>();
-    claims.put("jti", jwtToken.getJti());
-    claims.put("iat", Date.from(Instant.ofEpochSecond(jwtToken.getIat())));
-    claims.put("user", jwtToken.getUser());
+    claims.put("jti", jwtToken.jti());
+    claims.put("iat", Date.from(Instant.ofEpochSecond(jwtToken.iat())));
+    claims.put("user", jwtToken.user());
 
     return Jwts.builder()
         .setClaims(claims)
-        .setSubject(jwtToken.getSub())
-        .setIssuedAt(Date.from(Instant.ofEpochSecond(jwtToken.getIat())))
-        .setExpiration(Date.from(Instant.ofEpochSecond(jwtToken.getExp())))
+        .setSubject(jwtToken.sub())
+        .setIssuedAt(Date.from(Instant.ofEpochSecond(jwtToken.iat())))
+        .setExpiration(Date.from(Instant.ofEpochSecond(jwtToken.exp())))
         .signWith(getSignInKey(), SignatureAlgorithm.HS256)
         .compact();
   }

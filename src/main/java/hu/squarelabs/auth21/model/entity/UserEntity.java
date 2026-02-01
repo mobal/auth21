@@ -1,9 +1,7 @@
 package hu.squarelabs.auth21.model.entity;
 
 import java.time.Instant;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
-@DynamoDbBean
 public class UserEntity {
   private String id;
   private String email;
@@ -14,8 +12,6 @@ public class UserEntity {
   private Instant updatedAt;
   private Instant deletedAt;
 
-  @DynamoDbPartitionKey
-  @DynamoDbAttribute("id")
   public String getId() {
     return id;
   }
@@ -24,8 +20,6 @@ public class UserEntity {
     this.id = id;
   }
 
-  @DynamoDbSecondaryPartitionKey(indexNames = "EmailIndex")
-  @DynamoDbAttribute("email")
   public String getEmail() {
     return email;
   }
@@ -34,7 +28,6 @@ public class UserEntity {
     this.email = email;
   }
 
-  @DynamoDbAttribute("password")
   public String getPassword() {
     return password;
   }
@@ -43,7 +36,6 @@ public class UserEntity {
     this.password = passwordHash;
   }
 
-  @DynamoDbAttribute("username")
   public String getUsername() {
     return username;
   }
@@ -52,7 +44,6 @@ public class UserEntity {
     this.username = username;
   }
 
-  @DynamoDbAttribute("display_name")
   public String getDisplayName() {
     return displayName;
   }
@@ -61,7 +52,6 @@ public class UserEntity {
     this.displayName = displayName;
   }
 
-  @DynamoDbAttribute("created_at")
   public Instant getCreatedAt() {
     return createdAt;
   }
@@ -70,7 +60,6 @@ public class UserEntity {
     this.createdAt = createdAt;
   }
 
-  @DynamoDbAttribute("updated_at")
   public Instant getUpdatedAt() {
     return updatedAt;
   }
@@ -79,7 +68,6 @@ public class UserEntity {
     this.updatedAt = updatedAt;
   }
 
-  @DynamoDbAttribute("deleted_at")
   public Instant getDeletedAt() {
     return deletedAt;
   }

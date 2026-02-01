@@ -85,10 +85,7 @@ class AuthServiceTest {
       user.setDisplayName("testuser");
       user.setPassword("hashed-password");
 
-      JwtToken jwtToken = new JwtToken();
-      jwtToken.setJti("jti-123");
-      jwtToken.setIat(1L);
-      jwtToken.setExp(3601L);
+      JwtToken jwtToken = new JwtToken("jti-123", null, 1L, 3601L, null);
 
       CustomUserDetails userDetails = new CustomUserDetails(user);
       Authentication authentication = mock(Authentication.class);
@@ -100,8 +97,8 @@ class AuthServiceTest {
       TokenResponse result = authService.login(email, password);
 
       verify(tokenService, times(1)).create(eq(jwtToken), anyString());
-      assertThat(result.getAccessToken()).isEqualTo("encoded-token");
-      assertThat(result.getRefreshToken()).isNotBlank();
+      assertThat(result.accessToken()).isEqualTo("encoded-token");
+      assertThat(result.refreshToken()).isNotBlank();
     }
 
     @Test
@@ -119,8 +116,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("should call tokenService.deleteById with correct JTI")
     void shouldCallTokenServiceDeleteByIdWithCorrectJti() {
-      JwtToken jwtToken = new JwtToken();
-      jwtToken.setJti("token-jti-123");
+      JwtToken jwtToken = new JwtToken("token-jti-123", null, null, null, null);
 
       when(jwtService.decodeJwtToken("jwt-token-string")).thenReturn(jwtToken);
 
@@ -158,9 +154,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("should throw when user does not exist for refresh token")
     void shouldThrowWhenUserMissingForRefreshToken() {
-      JwtToken jwtToken = new JwtToken();
-      jwtToken.setJti("jti-456");
-      jwtToken.setUser(Map.of("id", "user-456"));
+      JwtToken jwtToken = new JwtToken("jti-456", null, null, null, Map.of("id", "user-456"));
 
       String refreshToken = "refresh-token";
       Pair<JwtToken, String> tokenPair = ImmutablePair.of(jwtToken, refreshToken);
@@ -176,18 +170,13 @@ class AuthServiceTest {
     @Test
     @DisplayName("should revoke old token and generate new tokens on successful refresh")
     void shouldRevokeOldTokenAndGenerateNewTokensOnSuccessfulRefresh() {
-      JwtToken jwtToken = new JwtToken();
-      jwtToken.setJti("jti-123");
-      jwtToken.setUser(Map.of("id", "user-123"));
+      JwtToken jwtToken = new JwtToken("jti-123", null, null, null, Map.of("id", "user-123"));
 
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setEmail("user@example.com");
 
-      JwtToken newJwtToken = new JwtToken();
-      newJwtToken.setJti("new-jti-123");
-      newJwtToken.setIat(1L);
-      newJwtToken.setExp(3601L);
+      JwtToken newJwtToken = new JwtToken("new-jti-123", null, 1L, 3601L, null);
 
       String refreshToken = "refresh-token";
       Pair<JwtToken, String> tokenPair = ImmutablePair.of(jwtToken, refreshToken);

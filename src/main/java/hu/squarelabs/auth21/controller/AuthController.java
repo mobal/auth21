@@ -20,13 +20,13 @@ public class AuthController {
 
   @PostMapping("/login")
   public TokenResponse login(@Valid @RequestBody LoginRequest request) {
-    return authService.login(request.getEmail(), request.getPassword());
+    return authService.login(request.email(), request.password());
   }
 
   @PostMapping("/refresh")
   public TokenResponse refresh(@Valid @RequestBody RefreshRequest request)
       throws ResponseStatusException {
-    return authService.refresh(request.getRefreshToken());
+    return authService.refresh(request.refreshToken());
   }
 
   @GetMapping("/logout")

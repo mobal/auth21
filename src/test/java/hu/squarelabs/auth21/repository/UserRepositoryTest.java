@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import hu.squarelabs.auth21.config.DynamoDbTableSchemaConfig;
 import hu.squarelabs.auth21.model.entity.UserEntity;
 import java.util.Collections;
 import java.util.Iterator;
@@ -16,27 +17,34 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 @DisplayName("UserRepository")
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@ContextConfiguration(classes = DynamoDbTableSchemaConfig.class)
 class UserRepositoryTest {
 
   @Mock private DynamoDbEnhancedClient enhancedClient;
 
   @Mock private DynamoDbTable<UserEntity> userTable;
 
+  @Autowired private TableSchema<UserEntity> userEntityTableSchema;
+
   private UserRepository userRepository;
 
   @BeforeEach
   void setUp() {
     when(enhancedClient.table(eq("users"), any())).thenReturn((DynamoDbTable) userTable);
-    userRepository = new UserRepository(enhancedClient, "users");
+    userRepository = new UserRepository(enhancedClient, userEntityTableSchema, "users");
   }
 
   @Nested

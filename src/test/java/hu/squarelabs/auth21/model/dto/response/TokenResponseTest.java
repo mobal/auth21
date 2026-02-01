@@ -22,10 +22,10 @@ class TokenResponseTest {
 
       final TokenResponse response = new TokenResponse(accessToken, refreshToken, expiresIn);
 
-      assertThat(response.getAccessToken()).isEqualTo(accessToken);
-      assertThat(response.getRefreshToken()).isEqualTo(refreshToken);
-      assertThat(response.getExpiresIn()).isEqualTo(expiresIn);
-      assertThat(response.getTokenType()).isEqualTo("Bearer");
+      assertThat(response.accessToken()).isEqualTo(accessToken);
+      assertThat(response.refreshToken()).isEqualTo(refreshToken);
+      assertThat(response.expiresIn()).isEqualTo(expiresIn);
+      assertThat(response.tokenType()).isEqualTo("Bearer");
     }
 
     @Test
@@ -33,7 +33,7 @@ class TokenResponseTest {
     void shouldSetTokenTypeToBearer() {
       final TokenResponse response = new TokenResponse("access", "refresh", 3600L);
 
-      assertThat(response.getTokenType()).isEqualTo("Bearer");
+      assertThat(response.tokenType()).isEqualTo("Bearer");
     }
   }
 
@@ -46,7 +46,7 @@ class TokenResponseTest {
     void shouldGetAccessToken() {
       final TokenResponse response = new TokenResponse("my-access", "my-refresh", 3600L);
 
-      assertThat(response.getAccessToken()).isEqualTo("my-access");
+      assertThat(response.accessToken()).isEqualTo("my-access");
     }
 
     @Test
@@ -54,7 +54,7 @@ class TokenResponseTest {
     void shouldGetRefreshToken() {
       final TokenResponse response = new TokenResponse("access", "my-refresh", 3600L);
 
-      assertThat(response.getRefreshToken()).isEqualTo("my-refresh");
+      assertThat(response.refreshToken()).isEqualTo("my-refresh");
     }
 
     @Test
@@ -62,7 +62,7 @@ class TokenResponseTest {
     void shouldGetTokenType() {
       final TokenResponse response = new TokenResponse("access", "refresh", 3600L);
 
-      assertThat(response.getTokenType()).isEqualTo("Bearer");
+      assertThat(response.tokenType()).isEqualTo("Bearer");
     }
 
     @Test
@@ -70,7 +70,7 @@ class TokenResponseTest {
     void shouldGetExpiresIn() {
       final TokenResponse response = new TokenResponse("access", "refresh", 7200L);
 
-      assertThat(response.getExpiresIn()).isEqualTo(7200L);
+      assertThat(response.expiresIn()).isEqualTo(7200L);
     }
   }
 

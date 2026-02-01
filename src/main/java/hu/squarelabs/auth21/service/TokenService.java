@@ -25,25 +25,25 @@ public class TokenService {
 
   public void create(JwtToken jwtToken, String refreshToken) {
     final var tokenEntity = new TokenEntity();
-    tokenEntity.setJti(jwtToken.getJti());
+    tokenEntity.setJti(jwtToken.jti());
 
     final Map<String, Object> jwtTokenMap = new HashMap<>();
-    jwtTokenMap.put("jti", jwtToken.getJti());
-    jwtTokenMap.put("sub", jwtToken.getSub());
-    jwtTokenMap.put("iat", jwtToken.getIat());
-    jwtTokenMap.put("exp", jwtToken.getExp());
-    jwtTokenMap.put("user", jwtToken.getUser());
+    jwtTokenMap.put("jti", jwtToken.jti());
+    jwtTokenMap.put("sub", jwtToken.sub());
+    jwtTokenMap.put("iat", jwtToken.iat());
+    jwtTokenMap.put("exp", jwtToken.exp());
+    jwtTokenMap.put("user", jwtToken.user());
 
     tokenEntity.setJwtToken(jwtTokenMap);
     tokenEntity.setRefreshToken(refreshToken);
     tokenEntity.setCreatedAt(Instant.now());
     tokenEntity.setUpdatedAt(Instant.now());
-    tokenEntity.setExpiresAt(Instant.ofEpochSecond(jwtToken.getExp()));
+    tokenEntity.setExpiresAt(Instant.ofEpochSecond(jwtToken.exp()));
 
-    if (jwtToken.getUser() != null && jwtToken.getUser().containsKey("id")) {
-      tokenEntity.setUserId(jwtToken.getUser().get("id").toString());
+    if (jwtToken.user() != null && jwtToken.user().containsKey("id")) {
+      tokenEntity.setUserId(jwtToken.user().get("id").toString());
     } else {
-      tokenEntity.setUserId(jwtToken.getSub());
+      tokenEntity.setUserId(jwtToken.sub());
     }
 
     tokenRepository.save(tokenEntity);
@@ -70,12 +70,13 @@ public class TokenService {
         .findByRefreshToken(refreshToken)
         .map(
             entity -> {
-              final JwtToken jwtToken = new JwtToken();
-              jwtToken.setJti((String) entity.getJwtToken().get("jti"));
-              jwtToken.setSub((String) entity.getJwtToken().get("sub"));
-              jwtToken.setIat(((Number) entity.getJwtToken().get("iat")).longValue());
-              jwtToken.setExp(((Number) entity.getJwtToken().get("exp")).longValue());
-              jwtToken.setUser((Map<String, Object>) entity.getJwtToken().get("user"));
+              final JwtToken jwtToken =
+                  new JwtToken(
+                      (String) entity.getJwtToken().get("jti"),
+                      (String) entity.getJwtToken().get("sub"),
+                      ((Number) entity.getJwtToken().get("iat")).longValue(),
+                      ((Number) entity.getJwtToken().get("exp")).longValue(),
+                      (Map<String, Object>) entity.getJwtToken().get("user"));
               return ImmutablePair.of(jwtToken, entity.getRefreshToken());
             });
   }

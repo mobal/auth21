@@ -52,7 +52,7 @@ public class AuthService {
 
     tokenService.create(jwtToken, refreshToken);
 
-    return new TokenResponse(jwtService.encodeJwtToken(jwtToken), refreshToken, jwtToken.getExp());
+    return new TokenResponse(jwtService.encodeJwtToken(jwtToken), refreshToken, jwtToken.exp());
   }
 
   public TokenResponse refresh(String refreshToken) throws ResponseStatusException {
@@ -64,7 +64,7 @@ public class AuthService {
 
     Pair<JwtToken, String> data = tokens.get();
     final var jwtToken = data.getLeft();
-    final var userId = (String) ((Map<?, ?>) jwtToken.getUser()).get("id");
+    final var userId = (String) ((Map<?, ?>) jwtToken.user()).get("id");
     final var user =
         userService
             .getUserById(userId)
@@ -73,11 +73,11 @@ public class AuthService {
     JwtToken newJwtToken = jwtService.createJwtToken(user);
     String newRefreshToken = generateRefreshToken();
 
-    tokenService.deleteById(jwtToken.getJti());
+    tokenService.deleteById(jwtToken.jti());
     tokenService.create(newJwtToken, newRefreshToken);
 
     return new TokenResponse(
-        jwtService.encodeJwtToken(newJwtToken), newRefreshToken, newJwtToken.getExp());
+        jwtService.encodeJwtToken(newJwtToken), newRefreshToken, newJwtToken.exp());
   }
 
   public void logout(String jwtToken) {
@@ -87,7 +87,7 @@ public class AuthService {
     if (authentication != null) {
       SecurityContextHolder.clearContext();
 
-      tokenService.deleteById(decodedToken.getJti());
+      tokenService.deleteById(decodedToken.jti());
     }
   }
 

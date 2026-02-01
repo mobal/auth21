@@ -17,8 +17,9 @@ public class TokenRepository {
 
   public TokenRepository(
       DynamoDbEnhancedClient enhancedClient,
+      TableSchema<TokenEntity> tokenEntityTableSchema,
       @Value("${aws.dynamodb.table.tokens:auth-tokens}") String tableName) {
-    this.tokenTable = enhancedClient.table(tableName, TableSchema.fromBean(TokenEntity.class));
+    this.tokenTable = enhancedClient.table(tableName, tokenEntityTableSchema);
   }
 
   public void save(TokenEntity tokenEntity) {

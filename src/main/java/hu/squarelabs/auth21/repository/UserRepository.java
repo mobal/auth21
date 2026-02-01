@@ -15,16 +15,13 @@ import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 public class UserRepository {
   private static final Logger logger = LogManager.getLogger(UserRepository.class);
 
-  private final DynamoDbEnhancedClient enhancedClient;
   private final DynamoDbTable<UserEntity> userTable;
-  private final String tableName;
 
   public UserRepository(
       DynamoDbEnhancedClient enhancedClient,
+      TableSchema<UserEntity> userEntityTableSchema,
       @Value("${aws.dynamodb.table.users:users}") String tableName) {
-    this.enhancedClient = enhancedClient;
-    this.tableName = tableName;
-    this.userTable = enhancedClient.table(tableName, TableSchema.fromBean(UserEntity.class));
+    this.userTable = enhancedClient.table(tableName, userEntityTableSchema);
   }
 
   public Optional<UserEntity> findById(String userId) {
