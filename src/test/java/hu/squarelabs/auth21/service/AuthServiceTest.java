@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import hu.squarelabs.auth21.model.CustomUserDetails;
 import hu.squarelabs.auth21.model.JwtToken;
 import hu.squarelabs.auth21.model.dto.response.TokenResponse;
 import hu.squarelabs.auth21.model.entity.UserEntity;
@@ -52,12 +53,12 @@ class AuthServiceTest {
     void shouldThrowNotFoundWhenUserEmailNotExists() {
       final String email = "nonexistent@example.com";
       final String password = "password123";
-      when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
-      when(userService.getUserByEmail(email)).thenReturn(Optional.empty());
+
+      when(authenticationManager.authenticate(any()))
+          .thenThrow(new BadCredentialsException("User not found"));
 
       assertThatThrownBy(() -> authService.login(email, password))
-          .isInstanceOf(Exception.class)
-          .hasMessageContaining("User not found");
+          .isInstanceOf(BadCredentialsException.class);
     }
 
     @Test
@@ -89,8 +90,10 @@ class AuthServiceTest {
       jwtToken.setIat(1L);
       jwtToken.setExp(3601L);
 
-      when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
-      when(userService.getUserByEmail(email)).thenReturn(Optional.of(user));
+      CustomUserDetails userDetails = new CustomUserDetails(user);
+      Authentication authentication = mock(Authentication.class);
+      when(authentication.getPrincipal()).thenReturn(userDetails);
+      when(authenticationManager.authenticate(any())).thenReturn(authentication);
       when(jwtService.createJwtToken(user)).thenReturn(jwtToken);
       when(jwtService.encodeJwtToken(jwtToken)).thenReturn("encoded-token");
 

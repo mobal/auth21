@@ -6,7 +6,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import hu.squarelabs.auth21.model.entity.UserEntity;
-import java.time.Instant;
+import java.util.Collections;
+import java.util.Iterator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,8 +18,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 @DisplayName("UserRepository")
 @ExtendWith(MockitoExtension.class)
@@ -48,14 +51,17 @@ class UserRepositoryTest {
       user.setId(userId);
       user.setEmail("test@example.com");
 
-      when(userTable.getItem(any(Key.class))).thenReturn(user);
+      PageIterable<UserEntity> mockPageIterable = mock(PageIterable.class);
+      Iterator<UserEntity> mockIterator = Collections.singletonList(user).iterator();
+      when(mockPageIterable.items()).thenReturn(() -> mockIterator);
+      when(userTable.query(any(QueryEnhancedRequest.class))).thenReturn(mockPageIterable);
 
       final var result = userRepository.findById(userId);
 
       assertThat(result).isPresent();
       assertThat(result.get().getId()).isEqualTo(userId);
       assertThat(result.get().getEmail()).isEqualTo("test@example.com");
-      verify(userTable, times(1)).getItem(any(Key.class));
+      verify(userTable, times(1)).query(any(QueryEnhancedRequest.class));
     }
 
     @Test
@@ -63,29 +69,31 @@ class UserRepositoryTest {
     void shouldReturnEmptyOptionalWhenUserDoesNotExist() {
       final String userId = "non-existent-user";
 
-      when(userTable.getItem(any(Key.class))).thenReturn(null);
+      PageIterable<UserEntity> mockPageIterable = mock(PageIterable.class);
+      Iterator<UserEntity> mockIterator = Collections.emptyIterator();
+      when(mockPageIterable.items()).thenReturn(() -> mockIterator);
+      when(userTable.query(any(QueryEnhancedRequest.class))).thenReturn(mockPageIterable);
 
       final var result = userRepository.findById(userId);
 
       assertThat(result).isEmpty();
-      verify(userTable, times(1)).getItem(any(Key.class));
+      verify(userTable, times(1)).query(any(QueryEnhancedRequest.class));
     }
 
     @Test
     @DisplayName("should return empty optional when user is deleted")
     void shouldReturnEmptyOptionalWhenUserIsDeleted() {
       final String userId = "deleted-user-123";
-      final UserEntity deletedUser = new UserEntity();
-      deletedUser.setId(userId);
-      deletedUser.setEmail("deleted@example.com");
-      deletedUser.setDeletedAt(Instant.now());
 
-      when(userTable.getItem(any(Key.class))).thenReturn(deletedUser);
+      PageIterable<UserEntity> mockPageIterable = mock(PageIterable.class);
+      Iterator<UserEntity> mockIterator = Collections.emptyIterator();
+      when(mockPageIterable.items()).thenReturn(() -> mockIterator);
+      when(userTable.query(any(QueryEnhancedRequest.class))).thenReturn(mockPageIterable);
 
       final var result = userRepository.findById(userId);
 
       assertThat(result).isEmpty();
-      verify(userTable, times(1)).getItem(any(Key.class));
+      verify(userTable, times(1)).query(any(QueryEnhancedRequest.class));
     }
 
     @Test
@@ -93,11 +101,12 @@ class UserRepositoryTest {
     void shouldThrowRuntimeExceptionWhenDynamoDbOperationFails() {
       final String userId = "error-user";
 
-      when(userTable.getItem(any(Key.class))).thenThrow(new RuntimeException("DynamoDB error"));
+      when(userTable.query(any(QueryEnhancedRequest.class)))
+          .thenThrow(DynamoDbException.builder().message("DynamoDB error").build());
 
       assertThatThrownBy(() -> userRepository.findById(userId))
           .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("Error fetching user by id");
+          .hasMessageContaining("Failed to fetch user from database");
     }
   }
 
@@ -113,15 +122,15 @@ class UserRepositoryTest {
       user.setId("user-123");
       user.setEmail(email);
 
-      ArgumentCaptor<ScanEnhancedRequest> captor =
-          ArgumentCaptor.forClass(ScanEnhancedRequest.class);
+      PageIterable<UserEntity> mockPageIterable = mock(PageIterable.class);
+      Iterator<UserEntity> mockIterator = Collections.singletonList(user).iterator();
+      when(mockPageIterable.items()).thenReturn(() -> mockIterator);
+      when(userTable.scan(any(ScanEnhancedRequest.class))).thenReturn(mockPageIterable);
 
-      when(userTable.scan(captor.capture())).thenThrow(new RuntimeException("DynamoDB error"));
+      final var result = userRepository.findByEmail(email);
 
-      assertThatThrownBy(() -> userRepository.findByEmail(email))
-          .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("Error fetching user by email");
-
+      assertThat(result).isPresent();
+      assertThat(result.get().getEmail()).isEqualTo(email);
       verify(userTable, times(1)).scan(any(ScanEnhancedRequest.class));
     }
 
@@ -131,11 +140,11 @@ class UserRepositoryTest {
       final String email = "error@example.com";
 
       when(userTable.scan(any(ScanEnhancedRequest.class)))
-          .thenThrow(new RuntimeException("DynamoDB error"));
+          .thenThrow(DynamoDbException.builder().message("DynamoDB error").build());
 
       assertThatThrownBy(() -> userRepository.findByEmail(email))
           .isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("Error fetching user by email");
+          .hasMessageContaining("Failed to fetch user from database");
 
       verify(userTable, times(1)).scan(any(ScanEnhancedRequest.class));
     }
@@ -148,14 +157,15 @@ class UserRepositoryTest {
       ArgumentCaptor<ScanEnhancedRequest> captor =
           ArgumentCaptor.forClass(ScanEnhancedRequest.class);
 
-      when(userTable.scan(captor.capture())).thenThrow(new RuntimeException(""));
+      PageIterable<UserEntity> mockPageIterable = mock(PageIterable.class);
+      Iterator<UserEntity> mockIterator = Collections.emptyIterator();
+      when(mockPageIterable.items()).thenReturn(() -> mockIterator);
+      when(userTable.scan(captor.capture())).thenReturn(mockPageIterable);
 
-      try {
-        userRepository.findByEmail(email);
-      } catch (RuntimeException ignored) {
-      }
+      userRepository.findByEmail(email);
 
       assertThat(captor.getValue()).isNotNull();
+      assertThat(captor.getValue().filterExpression()).isNotNull();
     }
   }
 }
