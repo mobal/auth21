@@ -5,11 +5,12 @@ import hu.squarelabs.auth21.model.dto.request.RefreshRequest;
 import hu.squarelabs.auth21.model.dto.response.TokenResponse;
 import hu.squarelabs.auth21.service.AuthService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/v1")
 public class AuthController {
 
   private final AuthService authService;
@@ -30,6 +31,7 @@ public class AuthController {
   }
 
   @GetMapping("/logout")
+  @ResponseStatus(value = HttpStatus.NO_CONTENT)
   public void logout(@RequestHeader("Authorization") String authorizationHeader)
       throws ResponseStatusException {
     authService.logout(authorizationHeader.replace("Bearer ", ""));

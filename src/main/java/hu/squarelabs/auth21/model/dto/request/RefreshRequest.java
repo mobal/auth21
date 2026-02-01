@@ -1,3 +1,5 @@
 package hu.squarelabs.auth21.model.dto.request;
 
-public record RefreshRequest(String refreshToken) {}
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record RefreshRequest(@JsonProperty("refresh_token") String refreshToken) {}

@@ -44,7 +44,7 @@ class AuthControllerTest {
   }
 
   @Nested
-  @DisplayName("POST /api/v1/auth/login")
+  @DisplayName("POST /api/v1/login")
   class LoginEndpoint {
 
     @Test
@@ -52,7 +52,7 @@ class AuthControllerTest {
     void shouldReturnOkStatusOnLoginRequest() throws Exception {
       mockMvc
           .perform(
-              post("/api/v1/auth/login")
+              post("/api/v1/login")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content("{\"email\":\"user@example.com\",\"password\":\"password123\"}"))
           .andExpect(status().isOk());
@@ -63,7 +63,7 @@ class AuthControllerTest {
     void shouldReturnTokenResponseWithAccessToken() throws Exception {
       mockMvc
           .perform(
-              post("/api/v1/auth/login")
+              post("/api/v1/login")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content("{\"email\":\"user@example.com\",\"password\":\"password123\"}"))
           .andExpect(status().isOk())
@@ -76,7 +76,7 @@ class AuthControllerTest {
     void shouldReturnTokenResponseWithRefreshToken() throws Exception {
       mockMvc
           .perform(
-              post("/api/v1/auth/login")
+              post("/api/v1/login")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content("{\"email\":\"user@example.com\",\"password\":\"password123\"}"))
           .andExpect(status().isOk())
@@ -89,7 +89,7 @@ class AuthControllerTest {
     void shouldReturnTokenResponseWithExpirationTime() throws Exception {
       mockMvc
           .perform(
-              post("/api/v1/auth/login")
+              post("/api/v1/login")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content("{\"email\":\"user@example.com\",\"password\":\"password123\"}"))
           .andExpect(status().isOk())
@@ -102,7 +102,7 @@ class AuthControllerTest {
     void shouldReturnJsonContentType() throws Exception {
       mockMvc
           .perform(
-              post("/api/v1/auth/login")
+              post("/api/v1/login")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content("{\"email\":\"user@example.com\",\"password\":\"password123\"}"))
           .andExpect(status().isOk())
@@ -111,7 +111,7 @@ class AuthControllerTest {
   }
 
   @Nested
-  @DisplayName("POST /api/v1/auth/refresh")
+  @DisplayName("POST /api/v1/refresh")
   class RefreshTokenEndpoint {
 
     @Test
@@ -119,9 +119,9 @@ class AuthControllerTest {
     void shouldReturnOkStatusOnRefreshTokenRequest() throws Exception {
       mockMvc
           .perform(
-              post("/api/v1/auth/refresh")
+              post("/api/v1/refresh")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"refreshToken\":\"dummy-refresh-token\"}"))
+                  .content("{\"refresh_token\":\"dummy-refresh-token\"}"))
           .andExpect(status().isOk());
     }
 
@@ -130,9 +130,9 @@ class AuthControllerTest {
     void shouldReturnTokenResponseWithNewAccessToken() throws Exception {
       mockMvc
           .perform(
-              post("/api/v1/auth/refresh")
+              post("/api/v1/refresh")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"refreshToken\":\"dummy-refresh-token\"}"))
+                  .content("{\"refresh_token\":\"dummy-refresh-token\"}"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.access_token", equalTo("dummy-access-token")));
     }
@@ -142,9 +142,9 @@ class AuthControllerTest {
     void shouldReturnTokenResponseWithNewRefreshToken() throws Exception {
       mockMvc
           .perform(
-              post("/api/v1/auth/refresh")
+              post("/api/v1/refresh")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"refreshToken\":\"dummy-refresh-token\"}"))
+                  .content("{\"refresh_token\":\"dummy-refresh-token\"}"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.refresh_token", equalTo("dummy-refresh-token")));
     }
@@ -154,9 +154,9 @@ class AuthControllerTest {
     void shouldReturnJsonContentType() throws Exception {
       mockMvc
           .perform(
-              post("/api/v1/auth/refresh")
+              post("/api/v1/refresh")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"refreshToken\":\"dummy-refresh-token\"}"))
+                  .content("{\"refresh_token\":\"dummy-refresh-token\"}"))
           .andExpect(status().isOk())
           .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }

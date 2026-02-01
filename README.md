@@ -60,9 +60,9 @@ src/main/java/hu/squarelabs/auth21/
 
 ### Authentication
 
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/refresh-token` - Refresh access token
+- `POST /api/v1/login` - User login
+- `POST /api/v1/register` - User registration
+- `POST /api/v1/refresh-token` - Refresh access token
 
 ## Building
 
