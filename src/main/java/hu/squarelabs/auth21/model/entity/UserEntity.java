@@ -1,6 +1,7 @@
 package hu.squarelabs.auth21.model.entity;
 
 import java.time.Instant;
+import java.util.List;
 
 public class UserEntity {
   private String id;
@@ -8,6 +9,7 @@ public class UserEntity {
   private String password;
   private String username;
   private String displayName;
+  private List<String> roles;
   private Instant createdAt;
   private Instant updatedAt;
   private Instant deletedAt;
@@ -50,6 +52,14 @@ public class UserEntity {
 
   public void setDisplayName(String displayName) {
     this.displayName = displayName;
+  }
+
+  public List<String> getRoles() {
+    return roles;
+  }
+
+  public void setRoles(List<String> roles) {
+    this.roles = roles;
   }
 
   public Instant getCreatedAt() {

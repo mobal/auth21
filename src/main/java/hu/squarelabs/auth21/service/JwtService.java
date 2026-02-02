@@ -1,6 +1,7 @@
 package hu.squarelabs.auth21.service;
 
 import hu.squarelabs.auth21.model.JwtToken;
+import hu.squarelabs.auth21.model.SimpleUserDetails;
 import hu.squarelabs.auth21.model.entity.UserEntity;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -56,7 +57,7 @@ public class JwtService {
 
   public boolean isTokenValid(String token, UserDetails userDetails) {
     final String userId = extractUserId(token);
-    return (userId.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    return (userId.equals(((SimpleUserDetails) userDetails).getUserId()) && !isTokenExpired(token));
   }
 
   private boolean isTokenExpired(String token) {

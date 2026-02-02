@@ -1,8 +1,9 @@
 package hu.squarelabs.auth21.service;
 
 import hu.squarelabs.auth21.exception.UserNotFoundException;
-import hu.squarelabs.auth21.model.CustomUserDetails;
 import hu.squarelabs.auth21.model.JwtToken;
+import hu.squarelabs.auth21.model.SimpleUserDetails;
+import hu.squarelabs.auth21.model.dto.request.RegistrationRequest;
 import hu.squarelabs.auth21.model.dto.response.TokenResponse;
 import hu.squarelabs.auth21.model.entity.UserEntity;
 import java.security.SecureRandom;
@@ -44,7 +45,7 @@ public class AuthService {
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    final CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+    final SimpleUserDetails userDetails = (SimpleUserDetails) authentication.getPrincipal();
     final UserEntity user = userDetails.userEntity();
 
     final JwtToken jwtToken = jwtService.createJwtToken(user);
@@ -53,6 +54,18 @@ public class AuthService {
     tokenService.create(jwtToken, refreshToken);
 
     return new TokenResponse(jwtService.encodeJwtToken(jwtToken), refreshToken, jwtToken.exp());
+  }
+
+  public String register(RegistrationRequest requestBody) {
+    return userService.create(
+        requestBody.email(),
+        requestBody.password(),
+        requestBody.username(),
+        requestBody.displayName());
+  }
+
+  public String register(String email, String password, String username, String displayName) {
+    return userService.create(email, password, username, displayName);
   }
 
   public TokenResponse refresh(String refreshToken) throws ResponseStatusException {

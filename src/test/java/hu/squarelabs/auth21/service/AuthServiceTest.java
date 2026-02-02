@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import hu.squarelabs.auth21.model.CustomUserDetails;
 import hu.squarelabs.auth21.model.JwtToken;
+import hu.squarelabs.auth21.model.SimpleUserDetails;
 import hu.squarelabs.auth21.model.dto.response.TokenResponse;
 import hu.squarelabs.auth21.model.entity.UserEntity;
 import java.util.Map;
@@ -87,7 +87,7 @@ class AuthServiceTest {
 
       JwtToken jwtToken = new JwtToken("jti-123", null, 1L, 3601L, null);
 
-      CustomUserDetails userDetails = new CustomUserDetails(user);
+      SimpleUserDetails userDetails = new SimpleUserDetails(user);
       Authentication authentication = mock(Authentication.class);
       when(authentication.getPrincipal()).thenReturn(userDetails);
       when(authenticationManager.authenticate(any())).thenReturn(authentication);

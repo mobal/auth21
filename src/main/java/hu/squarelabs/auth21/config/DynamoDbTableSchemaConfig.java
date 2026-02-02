@@ -4,11 +4,15 @@ import hu.squarelabs.auth21.converter.MapAttributeConverter;
 import hu.squarelabs.auth21.model.entity.TokenEntity;
 import hu.squarelabs.auth21.model.entity.UserEntity;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
+import software.amazon.awssdk.enhanced.dynamodb.EnhancedType;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.internal.converter.attribute.ListAttributeConverter;
+import software.amazon.awssdk.enhanced.dynamodb.internal.converter.attribute.StringAttributeConverter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticAttributeTags;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticTableSchema;
 
@@ -38,13 +42,28 @@ public class DynamoDbTableSchemaConfig {
             a -> a.name("password").getter(UserEntity::getPassword).setter(UserEntity::setPassword))
         .addAttribute(
             String.class,
-            a -> a.name("username").getter(UserEntity::getUsername).setter(UserEntity::setUsername))
+            a ->
+                a.name("username")
+                    .getter(UserEntity::getUsername)
+                    .setter(UserEntity::setUsername)
+                    .tags(StaticAttributeTags.secondaryPartitionKey("UsernameIndex")))
         .addAttribute(
             String.class,
             a ->
                 a.name("display_name")
                     .getter(UserEntity::getDisplayName)
                     .setter(UserEntity::setDisplayName))
+        .addAttribute(
+            EnhancedType.listOf(String.class),
+            a ->
+                a.name("roles")
+                    .getter(UserEntity::getRoles)
+                    .setter(UserEntity::setRoles)
+                    .attributeConverter(
+                        ListAttributeConverter.builder(EnhancedType.listOf(String.class))
+                            .collectionConstructor(ArrayList::new)
+                            .elementConverter(StringAttributeConverter.create())
+                            .build()))
         .addAttribute(
             Instant.class,
             a ->
