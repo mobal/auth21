@@ -28,6 +28,8 @@ configurations {
 }
 
 dependencies {
+    implementation 'com.amazonaws.serverless:aws-serverless-java-container-spring:2.1.5'
+
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
     implementation 'com.fasterxml.jackson.core:jackson-core'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
