@@ -265,7 +265,8 @@ class AuthControllerTest {
           .perform(
               post("/api/v1/register")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"email\":\"\",\"password\":\"password123\",\"username\":\"newuser\"}"))
+                  .content(
+                      "{\"email\":\"\",\"password\":\"password123\",\"username\":\"newuser\"}"))
           .andExpect(status().isBadRequest());
     }
 
@@ -276,7 +277,8 @@ class AuthControllerTest {
           .perform(
               post("/api/v1/register")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"email\":\"newuser@example.com\",\"password\":\"\",\"username\":\"newuser\"}"))
+                  .content(
+                      "{\"email\":\"newuser@example.com\",\"password\":\"\",\"username\":\"newuser\"}"))
           .andExpect(status().isBadRequest());
     }
 
@@ -287,7 +289,8 @@ class AuthControllerTest {
           .perform(
               post("/api/v1/register")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"email\":\"newuser@example.com\",\"password\":\"password123\",\"username\":\"\"}"))
+                  .content(
+                      "{\"email\":\"newuser@example.com\",\"password\":\"password123\",\"username\":\"\"}"))
           .andExpect(status().isBadRequest());
     }
 
@@ -370,9 +373,8 @@ class AuthControllerTest {
         var preAuthorizeAnnotation = method.getAnnotation(PreAuthorize.class);
 
         assert preAuthorizeAnnotation != null : "register endpoint should have @PreAuthorize";
-        assert preAuthorizeAnnotation
-            .value()
-            .equals("hasRole('ADMIN')") : "register should require ADMIN role";
+        assert preAuthorizeAnnotation.value().equals("hasRole('ADMIN')")
+            : "register should require ADMIN role";
       }
 
       @Test
