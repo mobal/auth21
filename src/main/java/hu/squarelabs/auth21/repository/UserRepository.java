@@ -15,6 +15,9 @@ import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 public class UserRepository {
   private static final Logger logger = LogManager.getLogger(UserRepository.class);
 
+  private static final AttributeValue NULL_ATTRIBUTE_VALUE =
+      AttributeValue.builder().nul(true).build();
+
   private final DynamoDbTable<UserEntity> userTable;
 
   public UserRepository(
@@ -36,12 +39,10 @@ public class UserRepository {
 
   public Optional<UserEntity> findById(String userId) {
     try {
-      final var nullAttr = AttributeValue.builder().nul(true).build();
-
       final var filterExpression =
           Expression.builder()
               .expression("attribute_not_exists(deleted_at) OR deleted_at = :null")
-              .putExpressionValue(":null", nullAttr)
+              .putExpressionValue(":null", NULL_ATTRIBUTE_VALUE)
               .build();
 
       final var queryRequest =
@@ -63,12 +64,10 @@ public class UserRepository {
 
   public Optional<UserEntity> findByEmail(String email) {
     try {
-      final var nullAttr = AttributeValue.builder().nul(true).build();
-
       final var filterExpression =
           Expression.builder()
               .expression("attribute_not_exists(deleted_at) OR deleted_at = :null")
-              .putExpressionValue(":null", nullAttr)
+              .putExpressionValue(":null", NULL_ATTRIBUTE_VALUE)
               .build();
 
       final var queryRequest =
@@ -97,12 +96,10 @@ public class UserRepository {
 
   public Optional<UserEntity> findByUserName(String username) {
     try {
-      final var nullAttr = AttributeValue.builder().nul(true).build();
-
       final var filterExpression =
           Expression.builder()
               .expression("attribute_not_exists(deleted_at) OR deleted_at = :null")
-              .putExpressionValue(":null", nullAttr)
+              .putExpressionValue(":null", NULL_ATTRIBUTE_VALUE)
               .build();
 
       final var queryRequest =

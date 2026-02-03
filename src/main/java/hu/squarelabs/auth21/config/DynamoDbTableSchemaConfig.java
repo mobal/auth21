@@ -104,7 +104,7 @@ public class DynamoDbTableSchemaConfig {
             a ->
                 a.name("jwt_token")
                     .getter(TokenEntity::getJwtToken)
-                    .setter((entity, value) -> entity.setJwtToken((Map<String, Object>) value))
+                    .setter(TokenEntity::setJwtToken)
                     .attributeConverter((AttributeConverter) mapConverter))
         .addAttribute(
             String.class,

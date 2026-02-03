@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,7 +20,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+  private static final Logger jwtAuthenticationLogger =
+      LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
   private final JwtService jwtService;
   private final SimpleUserDetailsService userDetailsService;
@@ -32,7 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(
-      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      HttpServletRequest request,
+      @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain)
       throws ServletException, IOException {
 
     final String authHeader = request.getHeader("Authorization");
@@ -56,11 +60,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authToken);
         } else {
-          logger.warn("Invalid JWT token for user ID: {}", userId);
+          jwtAuthenticationLogger.warn("Invalid JWT token for user ID: {}", userId);
         }
       }
     } catch (Exception e) {
-      logger.error("JWT authentication failed", e);
+      jwtAuthenticationLogger.error("JWT authentication failed", e);
     }
 
     filterChain.doFilter(request, response);
