@@ -14,100 +14,85 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 @DisplayName("MapAttributeConverter")
 class MapAttributeConverterTest {
 
-  private MapAttributeConverter converter;
+  private final MapAttributeConverter converter = new MapAttributeConverter();
 
   @Nested
-  @DisplayName("transformFrom method")
-  class TransformFromMethod {
+  @DisplayName("transformFrom")
+  class TransformFrom {
 
     @Test
-    @DisplayName("should convert map to AttributeValue string")
-    void shouldConvertMapToAttributeValue() throws Exception {
-      converter = new MapAttributeConverter();
-      final Map<String, Object> inputMap = new HashMap<>();
-      inputMap.put("key1", "value1");
+    @DisplayName("converts map to AttributeValue string")
+    void convertsMapToAttributeValueString() throws Exception {
+      Map<String, Object> inputMap = Map.of("key1", "value1");
 
-      final AttributeValue result = converter.transformFrom(inputMap);
+      AttributeValue result = converter.transformFrom(inputMap);
 
-      assertThat(result).isNotNull();
       assertThat(result.s()).contains("key1").contains("value1");
     }
 
     @Test
-    @DisplayName("should handle empty map")
-    void shouldHandleEmptyMap() throws Exception {
-      converter = new MapAttributeConverter();
-      final Map<String, Object> emptyMap = new HashMap<>();
+    @DisplayName("handles empty map")
+    void handlesEmptyMap() throws Exception {
+      AttributeValue result = converter.transformFrom(new HashMap<>());
 
-      final AttributeValue result = converter.transformFrom(emptyMap);
-
-      assertThat(result).isNotNull();
       assertThat(result.s()).isEqualTo("{}");
     }
 
     @Test
-    @DisplayName("should handle null map by returning null attribute")
-    void shouldHandleNullMap() {
-      converter = new MapAttributeConverter();
-      final AttributeValue result = converter.transformFrom(null);
+    @DisplayName("returns null attribute for null map")
+    void returnsNullAttributeForNullMap() {
+      AttributeValue result = converter.transformFrom(null);
 
-      assertThat(result).isNotNull();
       assertThat(result.nul()).isTrue();
     }
   }
 
   @Nested
-  @DisplayName("transformTo method")
-  class TransformToMethod {
+  @DisplayName("transformTo")
+  class TransformTo {
 
     @Test
-    @DisplayName("should convert AttributeValue string to map")
-    void shouldConvertAttributeValueToMap() throws Exception {
-      converter = new MapAttributeConverter();
-      final AttributeValue av = AttributeValue.builder().s("{\"key1\":\"value1\"}").build();
+    @DisplayName("converts AttributeValue string to map")
+    void convertsAttributeValueStringToMap() throws Exception {
+      AttributeValue av = AttributeValue.builder().s("{\"key1\":\"value1\"}").build();
 
-      final Map<String, Object> result = converter.transformTo(av);
+      Map<String, Object> result = converter.transformTo(av);
 
-      assertThat(result).isNotNull().isNotEmpty();
       assertThat(result).containsKey("key1");
     }
 
     @Test
-    @DisplayName("should handle null AttributeValue")
-    void shouldHandleNullAttributeValue() {
-      converter = new MapAttributeConverter();
-      final Map<String, Object> result = converter.transformTo(null);
+    @DisplayName("handles null AttributeValue")
+    void handlesNullAttributeValue() {
+      Map<String, Object> result = converter.transformTo(null);
 
       assertThat(result).isNull();
     }
 
     @Test
-    @DisplayName("should handle AttributeValue with null flag")
-    void shouldHandleAttributeValueWithNullFlag() {
-      converter = new MapAttributeConverter();
-      final AttributeValue av = AttributeValue.builder().nul(true).build();
+    @DisplayName("handles AttributeValue with null flag")
+    void handlesAttributeValueWithNullFlag() {
+      AttributeValue av = AttributeValue.builder().nul(true).build();
 
-      final Map<String, Object> result = converter.transformTo(av);
+      Map<String, Object> result = converter.transformTo(av);
 
       assertThat(result).isNull();
     }
 
     @Test
-    @DisplayName("should handle AttributeValue with no string value")
-    void shouldHandleAttributeValueWithNoStringValue() {
-      converter = new MapAttributeConverter();
-      final AttributeValue av = AttributeValue.builder().n("42").build();
+    @DisplayName("handles AttributeValue with no string value")
+    void handlesAttributeValueWithNoStringValue() {
+      AttributeValue av = AttributeValue.builder().n("42").build();
 
-      final Map<String, Object> result = converter.transformTo(av);
+      Map<String, Object> result = converter.transformTo(av);
 
-      assertThat(result).isNotNull().isEmpty();
+      assertThat(result).isEmpty();
     }
 
     @Test
-    @DisplayName("should throw RuntimeException on deserialization error")
-    void shouldThrowExceptionOnDeserializationError() throws Exception {
-      converter = new MapAttributeConverter();
-      final AttributeValue av = AttributeValue.builder().s("{invalid}").build();
+    @DisplayName("throws RuntimeException on deserialization error")
+    void throwsRuntimeExceptionOnDeserializationError() throws Exception {
+      AttributeValue av = AttributeValue.builder().s("{invalid}").build();
 
       assertThatThrownBy(() -> converter.transformTo(av))
           .isInstanceOf(RuntimeException.class)
@@ -116,28 +101,26 @@ class MapAttributeConverterTest {
   }
 
   @Nested
-  @DisplayName("type method")
-  class TypeMethod {
+  @DisplayName("type")
+  class Type {
 
     @Test
-    @DisplayName("should return EnhancedType for Map")
-    void shouldReturnEnhancedTypeForMap() {
-      converter = new MapAttributeConverter();
-      final var type = converter.type();
+    @DisplayName("returns EnhancedType for Map")
+    void returnsEnhancedTypeForMap() {
+      var type = converter.type();
 
       assertThat(type).isNotNull();
     }
   }
 
   @Nested
-  @DisplayName("attributeValueType method")
-  class AttributeValueTypeMethod {
+  @DisplayName("attributeValueType")
+  class AttributeValueType {
 
     @Test
-    @DisplayName("should return S for string attribute value type")
-    void shouldReturnStringAttributeValueType() {
-      converter = new MapAttributeConverter();
-      final var type = converter.attributeValueType();
+    @DisplayName("returns S for string attribute value type")
+    void returnsSForStringAttributeValueType() {
+      var type = converter.attributeValueType();
 
       assertThat(type).isNotNull();
     }

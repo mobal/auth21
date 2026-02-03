@@ -30,128 +30,51 @@ class CorrelationIdFilterTest {
   }
 
   @Nested
-  @DisplayName("doFilterInternal method")
-  class DoFilterInternalMethod {
+  @DisplayName("doFilterInternal")
+  class DoFilterInternal {
 
     @Test
-    @DisplayName("should pass request to filter chain")
-    void shouldPassRequestToFilterChain() throws ServletException, IOException {
-      when(request.getHeader("X-Correlation-ID")).thenReturn("test-correlation-id");
+    @DisplayName("uses existing correlation ID from header")
+    void usesExistingCorrelationIdFromHeader() throws ServletException, IOException {
+      when(request.getHeader("X-Correlation-ID")).thenReturn("existing-correlation-id");
 
       filter.doFilterInternal(request, response, filterChain);
 
-      verify(filterChain, times(1)).doFilter(request, response);
-    }
-
-    @Test
-    @DisplayName("should use provided correlation ID from header")
-    void shouldUseProvidedCorrelationIdFromHeader() throws ServletException, IOException {
-      final String correlationId = "existing-correlation-id-123";
-      when(request.getHeader("X-Correlation-ID")).thenReturn(correlationId);
-
-      filter.doFilterInternal(request, response, filterChain);
-
+      verify(response).setHeader("X-Correlation-ID", "existing-correlation-id");
       verify(filterChain).doFilter(request, response);
     }
 
     @Test
-    @DisplayName("should generate new correlation ID when header not present")
-    void shouldGenerateNewCorrelationIdWhenHeaderNotPresent() throws ServletException, IOException {
+    @DisplayName("generates UUID when correlation ID header is missing")
+    void generatesUuidWhenCorrelationIdHeaderIsMissing() throws ServletException, IOException {
       when(request.getHeader("X-Correlation-ID")).thenReturn(null);
 
       filter.doFilterInternal(request, response, filterChain);
 
-      verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
-    @DisplayName("should set correlation ID in response header")
-    void shouldSetCorrelationIdInResponseHeader() throws ServletException, IOException {
-      final String correlationId = "test-correlation-id";
-      when(request.getHeader("X-Correlation-ID")).thenReturn(correlationId);
-
-      filter.doFilterInternal(request, response, filterChain);
-
-      verify(response).setHeader("X-Correlation-ID", correlationId);
-    }
-  }
-
-  @Nested
-  @DisplayName("with existing correlation ID header")
-  class WithExistingCorrelationId {
-
-    @Test
-    @DisplayName("should set existing ID in response header")
-    void shouldSetExistingIdInResponseHeader() throws ServletException, IOException {
-      final String existingId = "existing-id-abc123";
-      when(request.getHeader("X-Correlation-ID")).thenReturn(existingId);
-
-      filter.doFilterInternal(request, response, filterChain);
-
-      verify(response).setHeader("X-Correlation-ID", existingId);
-    }
-
-    @Test
-    @DisplayName("should pass request with existing ID to filter chain")
-    void shouldPassRequestWithExistingIdToFilterChain() throws ServletException, IOException {
-      when(request.getHeader("X-Correlation-ID")).thenReturn("existing-id");
-
-      filter.doFilterInternal(request, response, filterChain);
-
-      verify(filterChain).doFilter(request, response);
-    }
-  }
-
-  @Nested
-  @DisplayName("with missing correlation ID header")
-  class WithMissingCorrelationId {
-
-    @Test
-    @DisplayName("should generate and set UUID in response header")
-    void shouldGenerateAndSetUuidInResponseHeader() throws ServletException, IOException {
-      when(request.getHeader("X-Correlation-ID")).thenReturn(null);
-
-      filter.doFilterInternal(request, response, filterChain);
-
-      // Verify that setHeader was called with a UUID-formatted ID
       verify(response).setHeader(eq("X-Correlation-ID"), matches("[a-f0-9-]{36}"));
-    }
-
-    @Test
-    @DisplayName("should pass request with generated ID to filter chain")
-    void shouldPassRequestWithGeneratedIdToFilterChain() throws ServletException, IOException {
-      when(request.getHeader("X-Correlation-ID")).thenReturn(null);
-
-      filter.doFilterInternal(request, response, filterChain);
-
       verify(filterChain).doFilter(request, response);
     }
-  }
-
-  @Nested
-  @DisplayName("with blank correlation ID header")
-  class WithBlankCorrelationId {
 
     @Test
-    @DisplayName("should treat blank string as missing and generate UUID")
-    void shouldTreatBlankStringAsMissingAndGenerateUuid() throws ServletException, IOException {
+    @DisplayName("generates UUID when correlation ID header is blank")
+    void generatesUuidWhenCorrelationIdHeaderIsBlank() throws ServletException, IOException {
       when(request.getHeader("X-Correlation-ID")).thenReturn("   ");
 
       filter.doFilterInternal(request, response, filterChain);
 
-      // Should generate a UUID for blank string
       verify(response).setHeader(eq("X-Correlation-ID"), matches("[a-f0-9-]{36}"));
+      verify(filterChain).doFilter(request, response);
     }
 
     @Test
-    @DisplayName("should treat empty string as missing and generate UUID")
-    void shouldTreatEmptyStringAsMissingAndGenerateUuid() throws ServletException, IOException {
+    @DisplayName("generates UUID when correlation ID header is empty string")
+    void generatesUuidWhenCorrelationIdHeaderIsEmptyString() throws ServletException, IOException {
       when(request.getHeader("X-Correlation-ID")).thenReturn("");
 
       filter.doFilterInternal(request, response, filterChain);
 
-      // Should generate a UUID for empty string
       verify(response).setHeader(eq("X-Correlation-ID"), matches("[a-f0-9-]{36}"));
+      verify(filterChain).doFilter(request, response);
     }
   }
 }

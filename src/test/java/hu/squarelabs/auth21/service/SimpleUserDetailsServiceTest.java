@@ -23,56 +23,57 @@ class SimpleUserDetailsServiceTest {
   @InjectMocks private SimpleUserDetailsService userDetailsService;
 
   @Nested
-  @DisplayName("loadUserByUsername method")
-  class LoadUserByUsernameMethod {
+  @DisplayName("loadUserByUsername")
+  class LoadUserByUsername {
     @Test
-    @DisplayName("should load user by username successfully")
-    void shouldLoadUserByUsername() {
-      final String username = "testuser";
-      UserEntity user = new UserEntity();
-      user.setId("user-123");
-      user.setUsername(username);
-      user.setEmail("test@example.com");
-      user.setPassword("hashedPassword");
-      user.setRoles(Collections.singletonList("USER"));
-      when(userService.getUserByUserName(username)).thenReturn(Optional.of(user));
-      var result = userDetailsService.loadUserByUsername(username);
-      assertThat(result).isNotNull();
-      assertThat(result).isInstanceOf(SimpleUserDetails.class);
-      assertThat(result.getUsername()).isEqualTo(username);
-      verify(userService).getUserByUserName(username);
-    }
-
-    @Test
-    @DisplayName("should load user by email when username not found")
-    void shouldLoadUserByEmail() {
-      final String email = "test@example.com";
+    @DisplayName("loads user by username when found")
+    void loadsUserByUsernameWhenFound() {
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setUsername("testuser");
-      user.setEmail(email);
+      user.setEmail("test@example.com");
       user.setPassword("hashedPassword");
       user.setRoles(Collections.singletonList("USER"));
-      when(userService.getUserByUserName(email)).thenReturn(Optional.empty());
-      when(userService.getUserByEmail(email)).thenReturn(Optional.of(user));
-      var result = userDetailsService.loadUserByUsername(email);
-      assertThat(result).isNotNull();
+      when(userService.getUserByUserName("testuser")).thenReturn(Optional.of(user));
+
+      var result = userDetailsService.loadUserByUsername("testuser");
+
       assertThat(result).isInstanceOf(SimpleUserDetails.class);
-      verify(userService).getUserByUserName(email);
-      verify(userService).getUserByEmail(email);
+      assertThat(result.getUsername()).isEqualTo("testuser");
+      verify(userService).getUserByUserName("testuser");
     }
 
     @Test
-    @DisplayName("should throw UserNotFoundException when user not found")
-    void shouldThrowUserNotFoundExceptionWhenUserNotFound() {
-      final String username = "nonexistent";
-      when(userService.getUserByUserName(username)).thenReturn(Optional.empty());
-      when(userService.getUserByEmail(username)).thenReturn(Optional.empty());
-      assertThatThrownBy(() -> userDetailsService.loadUserByUsername(username))
+    @DisplayName("loads user by email when username not found")
+    void loadsUserByEmailWhenUsernameNotFound() {
+      UserEntity user = new UserEntity();
+      user.setId("user-123");
+      user.setUsername("testuser");
+      user.setEmail("test@example.com");
+      user.setPassword("hashedPassword");
+      user.setRoles(Collections.singletonList("USER"));
+      when(userService.getUserByUserName("test@example.com")).thenReturn(Optional.empty());
+      when(userService.getUserByEmail("test@example.com")).thenReturn(Optional.of(user));
+
+      var result = userDetailsService.loadUserByUsername("test@example.com");
+
+      assertThat(result).isInstanceOf(SimpleUserDetails.class);
+      verify(userService).getUserByUserName("test@example.com");
+      verify(userService).getUserByEmail("test@example.com");
+    }
+
+    @Test
+    @DisplayName("throws UsernameNotFoundException when user not found")
+    void throwsUsernameNotFoundExceptionWhenUserNotFound() {
+      when(userService.getUserByUserName("nonexistent")).thenReturn(Optional.empty());
+      when(userService.getUserByEmail("nonexistent")).thenReturn(Optional.empty());
+
+      assertThatThrownBy(() -> userDetailsService.loadUserByUsername("nonexistent"))
           .isInstanceOf(UsernameNotFoundException.class)
-          .hasMessageContaining(username);
-      verify(userService).getUserByUserName(username);
-      verify(userService).getUserByEmail(username);
+          .hasMessageContaining("nonexistent");
+
+      verify(userService).getUserByUserName("nonexistent");
+      verify(userService).getUserByEmail("nonexistent");
     }
   }
 }

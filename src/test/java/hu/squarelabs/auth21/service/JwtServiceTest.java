@@ -24,101 +24,72 @@ import org.springframework.test.util.ReflectionTestUtils;
 class JwtServiceTest {
 
   private JwtService jwtService;
-  private String secretKey;
+  private UserEntity testUser;
+  private SimpleUserDetails testUserDetails;
 
   @BeforeEach
   void setUp() {
     jwtService = new JwtService();
-    // Generate a valid base64 encoded secret key (256 bits for HS256)
-    secretKey =
+    String secretKey =
         Base64.getEncoder()
             .encodeToString("MySecretKeyForTestingPurposesOnly1234567890".getBytes());
     ReflectionTestUtils.setField(jwtService, "secretKey", secretKey);
     ReflectionTestUtils.setField(jwtService, "jwtExpiration", 3600L);
     ReflectionTestUtils.setField(jwtService, "refreshExpiration", 86400L);
+
+    testUser = new UserEntity();
+    testUser.setId("user-123");
+    testUser.setUsername("testuser");
+    testUser.setEmail("test@example.com");
+    testUser.setPassword("hashedPassword");
+    testUser.setRoles(Collections.singletonList("USER"));
+    testUserDetails = new SimpleUserDetails(testUser);
   }
 
   @Nested
-  @DisplayName("generateToken method")
-  class GenerateTokenMethod {
+  @DisplayName("generateToken")
+  class GenerateToken {
 
     @Test
-    @DisplayName("should generate valid JWT token for UserDetails")
-    void shouldGenerateValidToken() {
-      UserEntity user = new UserEntity();
-      user.setId("user-123");
-      user.setUsername("testuser");
-      user.setEmail("test@example.com");
-      user.setPassword("hashedPassword");
-      user.setRoles(Collections.singletonList("USER"));
+    @DisplayName("generates valid JWT token for UserDetails")
+    void generatesValidJwtTokenForUserDetails() {
+      String token = jwtService.generateToken(testUserDetails);
 
-      SimpleUserDetails userDetails = new SimpleUserDetails(user);
-
-      String token = jwtService.generateToken(userDetails);
-
-      assertThat(token).isNotNull();
-      assertThat(token).isNotEmpty();
+      assertThat(token).isNotBlank();
     }
 
     @Test
-    @DisplayName("should generate token with extra claims")
-    void shouldGenerateTokenWithExtraClaims() {
-      UserEntity user = new UserEntity();
-      user.setId("user-123");
-      user.setUsername("testuser");
-      user.setEmail("test@example.com");
-      user.setPassword("hashedPassword");
-      user.setRoles(Collections.singletonList("USER"));
-
-      SimpleUserDetails userDetails = new SimpleUserDetails(user);
+    @DisplayName("generates token with extra claims")
+    void generatesTokenWithExtraClaims() {
       Map<String, Object> extraClaims = Map.of("customClaim", "customValue");
 
-      String token = jwtService.generateToken(extraClaims, userDetails);
+      String token = jwtService.generateToken(extraClaims, testUserDetails);
 
-      assertThat(token).isNotNull();
-      assertThat(token).isNotEmpty();
+      assertThat(token).isNotBlank();
     }
   }
 
   @Nested
-  @DisplayName("generateRefreshToken method")
-  class GenerateRefreshTokenMethod {
+  @DisplayName("generateRefreshToken")
+  class GenerateRefreshToken {
 
     @Test
-    @DisplayName("should generate valid refresh token")
-    void shouldGenerateValidRefreshToken() {
-      UserEntity user = new UserEntity();
-      user.setId("user-123");
-      user.setUsername("testuser");
-      user.setEmail("test@example.com");
-      user.setPassword("hashedPassword");
-      user.setRoles(Collections.singletonList("USER"));
+    @DisplayName("generates valid refresh token")
+    void generatesValidRefreshToken() {
+      String refreshToken = jwtService.generateRefreshToken(testUserDetails);
 
-      SimpleUserDetails userDetails = new SimpleUserDetails(user);
-
-      String refreshToken = jwtService.generateRefreshToken(userDetails);
-
-      assertThat(refreshToken).isNotNull();
-      assertThat(refreshToken).isNotEmpty();
+      assertThat(refreshToken).isNotBlank();
     }
   }
 
   @Nested
-  @DisplayName("extractUserId method")
-  class ExtractUserIdMethod {
+  @DisplayName("extractUserId")
+  class ExtractUserId {
 
     @Test
-    @DisplayName("should extract user ID from token")
-    void shouldExtractUserId() {
-      UserEntity user = new UserEntity();
-      user.setId("user-123");
-      user.setUsername("testuser");
-      user.setEmail("test@example.com");
-      user.setPassword("hashedPassword");
-      user.setRoles(Collections.singletonList("USER"));
-
-      SimpleUserDetails userDetails = new SimpleUserDetails(user);
-      String token = jwtService.generateToken(userDetails);
+    @DisplayName("extracts user ID from token")
+    void extractsUserIdFromToken() {
+      String token = jwtService.generateToken(testUserDetails);
 
       String userId = jwtService.extractUserId(token);
 
@@ -127,44 +98,29 @@ class JwtServiceTest {
   }
 
   @Nested
-  @DisplayName("extractExpiration method")
-  class ExtractExpirationMethod {
+  @DisplayName("extractExpiration")
+  class ExtractExpiration {
 
     @Test
-    @DisplayName("should extract expiration date from token")
-    void shouldExtractExpiration() {
-      UserEntity user = new UserEntity();
-      user.setId("user-123");
-      user.setUsername("testuser");
-      user.setEmail("test@example.com");
-      user.setPassword("hashedPassword");
-      user.setRoles(Collections.singletonList("USER"));
-
-      SimpleUserDetails userDetails = new SimpleUserDetails(user);
-      String token = jwtService.generateToken(userDetails);
+    @DisplayName("extracts expiration date from token")
+    void extractsExpirationDateFromToken() {
+      String token = jwtService.generateToken(testUserDetails);
 
       Date expiration = jwtService.extractExpiration(token);
 
-      assertThat(expiration).isNotNull();
       assertThat(expiration).isAfter(new Date());
     }
   }
 
   @Nested
-  @DisplayName("isTokenValid method")
-  class IsTokenValidMethod {
+  @DisplayName("isTokenValid")
+  class IsTokenValid {
 
     @Test
-    @DisplayName("should return true for valid token")
-    void shouldReturnTrueForValidToken() {
-      UserEntity user = new UserEntity();
-      user.setId("testuser"); // Use same value as username
-      user.setUsername("testuser");
-      user.setEmail("test@example.com");
-      user.setPassword("hashedPassword");
-      user.setRoles(Collections.singletonList("USER"));
-
-      SimpleUserDetails userDetails = new SimpleUserDetails(user);
+    @DisplayName("returns true for valid token")
+    void returnsTrueForValidToken() {
+      testUser.setId("testuser");
+      SimpleUserDetails userDetails = new SimpleUserDetails(testUser);
       String token = jwtService.generateToken(userDetails);
 
       boolean isValid = jwtService.isTokenValid(token, userDetails);
@@ -173,26 +129,18 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("should return false for token with different username")
-    void shouldReturnFalseForTokenWithDifferentUsername() {
-      UserEntity user = new UserEntity();
-      user.setId("testuser"); // Match username
-      user.setUsername("testuser");
-      user.setEmail("test@example.com");
-      user.setPassword("hashedPassword");
-      user.setRoles(Collections.singletonList("USER"));
-
-      SimpleUserDetails userDetails = new SimpleUserDetails(user);
+    @DisplayName("returns false for token with different username")
+    void returnsFalseForTokenWithDifferentUsername() {
+      testUser.setId("testuser");
+      SimpleUserDetails userDetails = new SimpleUserDetails(testUser);
       String token = jwtService.generateToken(userDetails);
 
-      // Create different user with different username
       UserEntity differentUser = new UserEntity();
-      differentUser.setId("differentuser"); // Match username
+      differentUser.setId("differentuser");
       differentUser.setUsername("differentuser");
       differentUser.setEmail("different@example.com");
       differentUser.setPassword("hashedPassword");
       differentUser.setRoles(Collections.singletonList("USER"));
-
       SimpleUserDetails differentUserDetails = new SimpleUserDetails(differentUser);
 
       boolean isValid = jwtService.isTokenValid(token, differentUserDetails);
@@ -202,39 +150,34 @@ class JwtServiceTest {
   }
 
   @Nested
-  @DisplayName("createJwtToken method")
-  class CreateJwtTokenMethod {
+  @DisplayName("createJwtToken")
+  class CreateJwtToken {
 
     @Test
-    @DisplayName("should create JwtToken from UserEntity")
-    void shouldCreateJwtToken() {
-      UserEntity user = new UserEntity();
-      user.setId("user-123");
-      user.setUsername("testuser");
-      user.setEmail("test@example.com");
-      user.setDisplayName("Test User");
+    @DisplayName("creates JwtToken from UserEntity with all required fields")
+    void createsJwtTokenFromUserEntityWithAllRequiredFields() {
+      testUser.setDisplayName("Test User");
 
-      JwtToken jwtToken = jwtService.createJwtToken(user);
+      JwtToken jwtToken = jwtService.createJwtToken(testUser);
 
-      assertThat(jwtToken).isNotNull();
       assertThat(jwtToken.jti()).isNotNull();
       assertThat(jwtToken.sub()).isEqualTo("user-123");
       assertThat(jwtToken.iat()).isNotNull();
       assertThat(jwtToken.exp()).isGreaterThan(jwtToken.iat());
-      assertThat(jwtToken.user()).isNotNull();
-      assertThat(jwtToken.user().get("id")).isEqualTo("user-123");
-      assertThat(jwtToken.user().get("email")).isEqualTo("test@example.com");
-      assertThat(jwtToken.user().get("nickname")).isEqualTo("Test User");
+      assertThat(jwtToken.user())
+          .containsEntry("id", "user-123")
+          .containsEntry("email", "test@example.com")
+          .containsEntry("nickname", "Test User");
     }
   }
 
   @Nested
-  @DisplayName("encodeJwtToken method")
-  class EncodeJwtTokenMethod {
+  @DisplayName("encodeJwtToken")
+  class EncodeJwtToken {
 
     @Test
-    @DisplayName("should encode JwtToken to string")
-    void shouldEncodeJwtToken() {
+    @DisplayName("encodes JwtToken to string")
+    void encodesJwtTokenToString() {
       JwtToken jwtToken =
           new JwtToken(
               "jti-123",
@@ -245,18 +188,17 @@ class JwtServiceTest {
 
       String encodedToken = jwtService.encodeJwtToken(jwtToken);
 
-      assertThat(encodedToken).isNotNull();
-      assertThat(encodedToken).isNotEmpty();
+      assertThat(encodedToken).isNotBlank();
     }
   }
 
   @Nested
-  @DisplayName("decodeJwtToken method")
-  class DecodeJwtTokenMethod {
+  @DisplayName("decodeJwtToken")
+  class DecodeJwtToken {
 
     @Test
-    @DisplayName("should decode JWT token string to JwtToken")
-    void shouldDecodeJwtToken() {
+    @DisplayName("decodes JWT token string to JwtToken")
+    void decodesJwtTokenStringToJwtToken() {
       JwtToken originalToken =
           new JwtToken(
               "jti-123",
@@ -268,28 +210,19 @@ class JwtServiceTest {
       String encodedToken = jwtService.encodeJwtToken(originalToken);
       JwtToken decodedToken = jwtService.decodeJwtToken(encodedToken);
 
-      assertThat(decodedToken).isNotNull();
       assertThat(decodedToken.sub()).isEqualTo("user-123");
       assertThat(decodedToken.user()).isNotNull();
     }
   }
 
   @Nested
-  @DisplayName("extractClaim method")
-  class ExtractClaimMethod {
+  @DisplayName("extractClaim")
+  class ExtractClaim {
 
     @Test
-    @DisplayName("should extract custom claim from token")
-    void shouldExtractCustomClaim() {
-      UserEntity user = new UserEntity();
-      user.setId("user-123");
-      user.setUsername("testuser");
-      user.setEmail("test@example.com");
-      user.setPassword("hashedPassword");
-      user.setRoles(Collections.singletonList("USER"));
-
-      SimpleUserDetails userDetails = new SimpleUserDetails(user);
-      String token = jwtService.generateToken(userDetails);
+    @DisplayName("extracts custom claim from token")
+    void extractsCustomClaimFromToken() {
+      String token = jwtService.generateToken(testUserDetails);
 
       String subject = jwtService.extractClaim(token, Claims::getSubject);
 

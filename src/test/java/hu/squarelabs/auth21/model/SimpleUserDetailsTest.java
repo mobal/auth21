@@ -13,128 +13,140 @@ import org.junit.jupiter.api.Test;
 @DisplayName("SimpleUserDetails")
 class SimpleUserDetailsTest {
   @Nested
-  @DisplayName("getAuthorities method")
-  class GetAuthoritiesMethod {
+  @DisplayName("getAuthorities")
+  class GetAuthorities {
     @Test
-    @DisplayName("should return authorities with ROLE_ prefix")
-    void shouldReturnAuthoritiesWithRolePrefix() {
+    @DisplayName("returns authorities with ROLE_ prefix")
+    void returnsAuthoritiesWithRolePrefix() {
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setUsername("testuser");
       user.setRoles(Arrays.asList("USER", "ADMIN"));
+
       SimpleUserDetails userDetails = new SimpleUserDetails(user);
-      var authorities = userDetails.getAuthorities();
-      assertThat(authorities).hasSize(2);
-      assertThat(authorities)
+
+      assertThat(userDetails.getAuthorities())
           .extracting("authority")
           .containsExactlyInAnyOrder("ROLE_USER", "ROLE_ADMIN");
     }
 
     @Test
-    @DisplayName("should return empty list when roles is null")
-    void shouldReturnEmptyListWhenRolesIsNull() {
+    @DisplayName("returns empty list when roles is null")
+    void returnsEmptyListWhenRolesIsNull() {
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setUsername("testuser");
       user.setRoles(null);
+
       SimpleUserDetails userDetails = new SimpleUserDetails(user);
-      var authorities = userDetails.getAuthorities();
-      assertThat(authorities).isEmpty();
+
+      assertThat(userDetails.getAuthorities()).isEmpty();
     }
 
     @Test
-    @DisplayName("should return empty list when roles is empty")
-    void shouldReturnEmptyListWhenRolesIsEmpty() {
+    @DisplayName("returns empty list when roles is empty")
+    void returnsEmptyListWhenRolesIsEmpty() {
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setUsername("testuser");
       user.setRoles(Collections.emptyList());
+
       SimpleUserDetails userDetails = new SimpleUserDetails(user);
-      var authorities = userDetails.getAuthorities();
-      assertThat(authorities).isEmpty();
+
+      assertThat(userDetails.getAuthorities()).isEmpty();
     }
 
     @Test
-    @DisplayName("should filter out null and blank roles")
-    void shouldFilterOutNullAndBlankRoles() {
+    @DisplayName("filters out null and blank roles")
+    void filtersOutNullAndBlankRoles() {
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setUsername("testuser");
       user.setRoles(Arrays.asList("USER", null, "", "  ", "ADMIN"));
+
       SimpleUserDetails userDetails = new SimpleUserDetails(user);
-      var authorities = userDetails.getAuthorities();
-      assertThat(authorities).hasSize(2);
-      assertThat(authorities)
+
+      assertThat(userDetails.getAuthorities())
           .extracting("authority")
           .containsExactlyInAnyOrder("ROLE_USER", "ROLE_ADMIN");
     }
   }
 
   @Nested
-  @DisplayName("getUserId method")
-  class GetUserIdMethod {
+  @DisplayName("getUserId")
+  class GetUserId {
     @Test
-    @DisplayName("should return user ID")
-    void shouldReturnUserId() {
+    @DisplayName("returns user ID")
+    void returnsUserId() {
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setUsername("testuser");
+
       SimpleUserDetails userDetails = new SimpleUserDetails(user);
+
       assertThat(userDetails.getUserId()).isEqualTo("user-123");
     }
   }
 
   @Nested
-  @DisplayName("getUsername method")
-  class GetUsernameMethod {
+  @DisplayName("getUsername")
+  class GetUsername {
     @Test
-    @DisplayName("should return username")
-    void shouldReturnUsername() {
+    @DisplayName("returns username")
+    void returnsUsername() {
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setUsername("testuser");
+
       SimpleUserDetails userDetails = new SimpleUserDetails(user);
+
       assertThat(userDetails.getUsername()).isEqualTo("testuser");
     }
   }
 
   @Nested
-  @DisplayName("getPassword method")
-  class GetPasswordMethod {
+  @DisplayName("getPassword")
+  class GetPassword {
     @Test
-    @DisplayName("should return password")
-    void shouldReturnPassword() {
+    @DisplayName("returns password")
+    void returnsPassword() {
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setUsername("testuser");
       user.setPassword("hashedPassword");
+
       SimpleUserDetails userDetails = new SimpleUserDetails(user);
+
       assertThat(userDetails.getPassword()).isEqualTo("hashedPassword");
     }
   }
 
   @Nested
-  @DisplayName("isEnabled method")
-  class IsEnabledMethod {
+  @DisplayName("isEnabled")
+  class IsEnabled {
     @Test
-    @DisplayName("should return true when deletedAt is null")
-    void shouldReturnTrueWhenDeletedAtIsNull() {
+    @DisplayName("returns true when user is not deleted")
+    void returnsTrueWhenUserIsNotDeleted() {
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setUsername("testuser");
       user.setDeletedAt(null);
+
       SimpleUserDetails userDetails = new SimpleUserDetails(user);
+
       assertThat(userDetails.isEnabled()).isTrue();
     }
 
     @Test
-    @DisplayName("should return false when deletedAt is set")
-    void shouldReturnFalseWhenDeletedAtIsSet() {
+    @DisplayName("returns false when user is deleted")
+    void returnsFalseWhenUserIsDeleted() {
       UserEntity user = new UserEntity();
       user.setId("user-123");
       user.setUsername("testuser");
       user.setDeletedAt(Instant.now());
+
       SimpleUserDetails userDetails = new SimpleUserDetails(user);
+
       assertThat(userDetails.isEnabled()).isFalse();
     }
   }
