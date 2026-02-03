@@ -111,7 +111,8 @@ class AuthServiceTest {
       user.setDisplayName("testuser");
       user.setPassword("hashed-password");
 
-      JwtToken jwtToken = new JwtToken("jti-123", "user-123", 1L, 3601L, Map.of("id", "user-123", "email", email));
+      JwtToken jwtToken =
+          new JwtToken("jti-123", "user-123", 1L, 3601L, Map.of("id", "user-123", "email", email));
 
       SimpleUserDetails userDetails = new SimpleUserDetails(user);
       Authentication authentication = mock(Authentication.class);
