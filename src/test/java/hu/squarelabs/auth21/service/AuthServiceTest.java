@@ -1,7 +1,6 @@
 package hu.squarelabs.auth21.service;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -14,7 +13,6 @@ import java.util.Optional;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -102,10 +100,32 @@ class AuthServiceTest {
     }
 
     @Test
-    @Disabled
     @DisplayName("should return access token and refresh token on successful login")
     void shouldReturnTokensOnSuccessfulLogin() {
-      assertTrue(true);
+      final String email = "user@example.com";
+      final String password = "password123";
+
+      final UserEntity user = new UserEntity();
+      user.setId("user-123");
+      user.setEmail(email);
+      user.setDisplayName("testuser");
+      user.setPassword("hashed-password");
+
+      JwtToken jwtToken = new JwtToken("jti-123", "user-123", 1L, 3601L, Map.of("id", "user-123", "email", email));
+
+      SimpleUserDetails userDetails = new SimpleUserDetails(user);
+      Authentication authentication = mock(Authentication.class);
+      when(authentication.getPrincipal()).thenReturn(userDetails);
+      when(authenticationManager.authenticate(any())).thenReturn(authentication);
+      when(jwtService.createJwtToken(user)).thenReturn(jwtToken);
+      when(jwtService.encodeJwtToken(jwtToken)).thenReturn("encoded-access-token");
+
+      TokenResponse result = authService.login(email, password);
+
+      assertThat(result).isNotNull();
+      assertThat(result.accessToken()).isEqualTo("encoded-access-token");
+      assertThat(result.refreshToken()).isNotBlank();
+      assertThat(result.expiresIn()).isEqualTo(3601L);
     }
   }
 

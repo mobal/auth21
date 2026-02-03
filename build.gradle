@@ -63,12 +63,29 @@ dependencies {
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
+    testRuntimeOnly 'net.bytebuddy:byte-buddy-agent'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
-	finalizedBy jacocoTestReport
+    useJUnitPlatform()
+
+    jvmArgs = [
+            '-Xshare:off',
+            '-XX:+IgnoreUnrecognizedVMOptions',
+            '-XX:+EnableDynamicAgentLoading'
+    ]
+
+    // Use a provider to avoid configuration cache issues
+    def byteBuddyAgent = configurations.testRuntimeClasspath.resolvedConfiguration.resolvedArtifacts
+            .find { it.name == 'byte-buddy-agent' }
+            ?.file
+
+    if (byteBuddyAgent) {
+        jvmArgs += "-javaagent:${byteBuddyAgent.absolutePath}"
+    }
+
+    finalizedBy jacocoTestReport
 }
 
 jacoco {
