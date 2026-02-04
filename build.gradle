@@ -21,44 +21,87 @@ repositories {
 }
 
 configurations {
-    all {
+    configureEach {
         exclude group: 'ch.qos.logback', module: 'logback-classic'
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+    testImplementation {
+        exclude group: 'com.amazonaws.serverless', module: 'aws-serverless-java-container-springboot3'
+    }
+    testRuntimeClasspath {
+        exclude group: 'com.amazonaws.serverless', module: 'aws-serverless-java-container-springboot3'
     }
 }
 
 dependencies {
+    implementation 'com.amazonaws.serverless:aws-serverless-java-container-springboot3:2.1.5'
+
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
     implementation 'com.fasterxml.jackson.core:jackson-core'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-dynamodb:4.0.0'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    
+    implementation 'org.apache.commons:commons-lang3'
     
     implementation 'org.apache.logging.log4j:log4j-api'
     implementation 'org.apache.logging.log4j:log4j-core'
     implementation 'org.apache.logging.log4j:log4j-layout-template-json'
     implementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
 
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.83'
+
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-crypto'
 
-    implementation 'software.amazon.awssdk:dynamodb:2.41.14'
-    implementation 'software.amazon.awssdk:dynamodb-enhanced:2.41.14'
+    implementation 'de.mkammerer:argon2-jvm:2.11'
     
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'	
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
+    testRuntimeOnly 'net.bytebuddy:byte-buddy-agent'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
-	finalizedBy jacocoTestReport
+test {
+    useJUnitPlatform()
+
+    systemProperty 'spring.profiles.active', 'test'
+
+    jvmArgs = [
+            '-Xshare:off',
+            '-XX:+IgnoreUnrecognizedVMOptions',
+            '-XX:+EnableDynamicAgentLoading'
+    ]
+
+    def byteBuddyAgent = configurations.testRuntimeClasspath.resolvedConfiguration.resolvedArtifacts
+            .find { it.name == 'byte-buddy-agent' }
+            ?.file
+
+    if (byteBuddyAgent) {
+        jvmArgs += "-javaagent:${byteBuddyAgent.absolutePath}"
+    }
+
+    finalizedBy jacocoTestReport
+
+    testLogging {
+        events "passed", "skipped", "failed", "standard_out", "standard_error"
+        showStandardStreams = true
+        exceptionFormat = "full"
+    }
 }
 
 jacoco {
@@ -76,7 +119,9 @@ jacocoTestReport {
 spotless {
     java {
         target 'src/**/*.java'
-        googleJavaFormat('1.19.2')
+        googleJavaFormat()
+        leadingTabsToSpaces(2)
+        importOrder()
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
@@ -93,3 +138,4 @@ sonar {
         property 'sonar.coverage.jacoco.xmlReportPaths', 'build/reports/jacoco/test/jacocoTestReport.xml'
     }
 }
+

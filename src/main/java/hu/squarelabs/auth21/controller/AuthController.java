@@ -1,23 +1,21 @@
 package hu.squarelabs.auth21.controller;
 
+import hu.squarelabs.auth21.model.dto.request.LoginRequest;
+import hu.squarelabs.auth21.model.dto.request.RefreshRequest;
+import hu.squarelabs.auth21.model.dto.request.RegistrationRequest;
 import hu.squarelabs.auth21.model.dto.response.TokenResponse;
 import hu.squarelabs.auth21.service.AuthService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import jakarta.validation.Valid;
+import java.net.URI;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping(
-    consumes = {MediaType.ALL_VALUE},
-    produces = {MediaType.APPLICATION_JSON_VALUE},
-    value = "/api/v1/auth")
+@RequestMapping("/api/v1")
 public class AuthController {
-  private static final Logger logger = LogManager.getLogger(AuthController.class);
 
   private final AuthService authService;
 
@@ -26,26 +24,27 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  @ResponseStatus(value = HttpStatus.OK)
-  public TokenResponse login() {
-    logger.info("Login request received");
-
-    return new TokenResponse("dummy-access-token", "dummy-refresh-token", 3600L);
+  public TokenResponse login(@Valid @RequestBody LoginRequest requestBody) {
+    return authService.login(requestBody.email(), requestBody.password());
   }
 
-  @PostMapping("/refresh-token")
-  @ResponseStatus(value = HttpStatus.OK)
-  public TokenResponse refreshToken() {
-    logger.info("Refresh token request received");
-
-    return new TokenResponse("dummy-access-token", "dummy-refresh-token", 3600L);
-  }
-
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping("/register")
-  @ResponseStatus(value = HttpStatus.OK)
-  public TokenResponse register() {
-    logger.info("Register request received");
+  public ResponseEntity<Void> register(@Valid @RequestBody RegistrationRequest requestBody) {
+    final String newUserId = authService.register(requestBody);
+    return ResponseEntity.created(URI.create("/api/v1/users/" + newUserId)).build();
+  }
 
-    return new TokenResponse("dummy-access-token", "dummy-refresh-token", 3600L);
+  @PostMapping("/refresh")
+  public TokenResponse refresh(@Valid @RequestBody RefreshRequest requestBody)
+      throws ResponseStatusException {
+    return authService.refresh(requestBody.refreshToken());
+  }
+
+  @GetMapping("/logout")
+  @ResponseStatus(value = HttpStatus.NO_CONTENT)
+  public void logout(@RequestHeader("Authorization") String authorizationHeader)
+      throws ResponseStatusException {
+    authService.logout(authorizationHeader.replace("Bearer ", ""));
   }
 }

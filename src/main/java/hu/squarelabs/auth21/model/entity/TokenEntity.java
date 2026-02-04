@@ -1,11 +1,8 @@
 package hu.squarelabs.auth21.model.entity;
 
-import hu.squarelabs.auth21.converter.MapAttributeConverter;
 import java.time.Instant;
 import java.util.Map;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
-@DynamoDbBean
 public class TokenEntity {
   private String jti;
   private Map<String, Object> jwtToken;
@@ -15,8 +12,6 @@ public class TokenEntity {
   private Instant updatedAt;
   private String userId;
 
-  @DynamoDbPartitionKey
-  @DynamoDbAttribute("jti")
   public String getJti() {
     return jti;
   }
@@ -25,8 +20,6 @@ public class TokenEntity {
     this.jti = jti;
   }
 
-  @DynamoDbConvertedBy(MapAttributeConverter.class)
-  @DynamoDbAttribute("jwt_token")
   public Map<String, Object> getJwtToken() {
     return jwtToken;
   }
@@ -35,8 +28,6 @@ public class TokenEntity {
     this.jwtToken = jwtToken;
   }
 
-  @DynamoDbSecondaryPartitionKey(indexNames = "RefreshTokenIndex")
-  @DynamoDbAttribute("refresh_token")
   public String getRefreshToken() {
     return refreshToken;
   }
@@ -45,7 +36,6 @@ public class TokenEntity {
     this.refreshToken = refreshToken;
   }
 
-  @DynamoDbAttribute("expires_at")
   public Instant getExpiresAt() {
     return expiresAt;
   }
@@ -54,7 +44,6 @@ public class TokenEntity {
     this.expiresAt = expiresAt;
   }
 
-  @DynamoDbAttribute("created_at")
   public Instant getCreatedAt() {
     return createdAt;
   }
@@ -63,7 +52,6 @@ public class TokenEntity {
     this.createdAt = createdAt;
   }
 
-  @DynamoDbAttribute("updated_at")
   public Instant getUpdatedAt() {
     return updatedAt;
   }
@@ -72,8 +60,6 @@ public class TokenEntity {
     this.updatedAt = updatedAt;
   }
 
-  @DynamoDbSecondaryPartitionKey(indexNames = "UserIdIndex")
-  @DynamoDbAttribute("user_id")
   public String getUserId() {
     return userId;
   }

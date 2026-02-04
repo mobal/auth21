@@ -1,0 +1,183 @@
+package hu.squarelabs.auth21.model;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+@DisplayName("JwtToken")
+class JwtTokenTest {
+
+  @Nested
+  @DisplayName("Constructor with parameters")
+  class ConstructorWithParameters {
+
+    @Test
+    @DisplayName("should create JwtToken with all fields")
+    void shouldCreateJwtTokenWithAllFields() {
+      final String jti = "test-jti-123";
+      final String sub = "user-456";
+      final Long iat = 1000L;
+      final Long exp = 2000L;
+      final Map<String, Object> user = new HashMap<>();
+      user.put("id", "user-456");
+
+      final JwtToken token = new JwtToken(jti, sub, iat, exp, user);
+
+      assertThat(token.jti()).isEqualTo(jti);
+      assertThat(token.sub()).isEqualTo(sub);
+      assertThat(token.iat()).isEqualTo(iat);
+      assertThat(token.exp()).isEqualTo(exp);
+      assertThat(token.user()).isEqualTo(user);
+    }
+
+    @Test
+    @DisplayName("should handle null user map")
+    void shouldHandleNullUserMap() {
+      final JwtToken token = new JwtToken("jti", "sub", 1000L, 2000L, null);
+
+      assertThat(token.user()).isNull();
+    }
+  }
+
+  @Nested
+  @DisplayName("Equality")
+  class Equality {
+
+    @Test
+    @DisplayName("should be equal for same field values")
+    void shouldBeEqualForSameFieldValues() {
+      final Map<String, Object> user = Map.of("id", "user-123");
+      final JwtToken token1 = new JwtToken("jti", "sub", 1000L, 2000L, user);
+      final JwtToken token2 = new JwtToken("jti", "sub", 1000L, 2000L, user);
+
+      assertThat(token1).isEqualTo(token2);
+    }
+
+    @Test
+    @DisplayName("should not be equal for different jti")
+    void shouldNotBeEqualForDifferentJti() {
+      final Map<String, Object> user = Map.of("id", "user-123");
+      final JwtToken token1 = new JwtToken("jti1", "sub", 1000L, 2000L, user);
+      final JwtToken token2 = new JwtToken("jti2", "sub", 1000L, 2000L, user);
+
+      assertThat(token1).isNotEqualTo(token2);
+    }
+
+    @Test
+    @DisplayName("should not be equal for different sub")
+    void shouldNotBeEqualForDifferentSub() {
+      final Map<String, Object> user = Map.of("id", "user-123");
+      final JwtToken token1 = new JwtToken("jti", "sub1", 1000L, 2000L, user);
+      final JwtToken token2 = new JwtToken("jti", "sub2", 1000L, 2000L, user);
+
+      assertThat(token1).isNotEqualTo(token2);
+    }
+
+    @Test
+    @DisplayName("should not be equal for different iat")
+    void shouldNotBeEqualForDifferentIat() {
+      final Map<String, Object> user = Map.of("id", "user-123");
+      final JwtToken token1 = new JwtToken("jti", "sub", 1000L, 2000L, user);
+      final JwtToken token2 = new JwtToken("jti", "sub", 1100L, 2000L, user);
+
+      assertThat(token1).isNotEqualTo(token2);
+    }
+
+    @Test
+    @DisplayName("should not be equal for different exp")
+    void shouldNotBeEqualForDifferentExp() {
+      final Map<String, Object> user = Map.of("id", "user-123");
+      final JwtToken token1 = new JwtToken("jti", "sub", 1000L, 2000L, user);
+      final JwtToken token2 = new JwtToken("jti", "sub", 1000L, 3000L, user);
+
+      assertThat(token1).isNotEqualTo(token2);
+    }
+
+    @Test
+    @DisplayName("should not be equal for different user")
+    void shouldNotBeEqualForDifferentUser() {
+      final JwtToken token1 = new JwtToken("jti", "sub", 1000L, 2000L, Map.of("id", "1"));
+      final JwtToken token2 = new JwtToken("jti", "sub", 1000L, 2000L, Map.of("id", "2"));
+
+      assertThat(token1).isNotEqualTo(token2);
+    }
+
+    @Test
+    @DisplayName("should not be equal to null")
+    void shouldNotBeEqualToNull() {
+      final JwtToken token = new JwtToken("jti", "sub", 1000L, 2000L, null);
+
+      assertThat(token).isNotEqualTo(null);
+    }
+
+    @Test
+    @DisplayName("should not be equal to different type")
+    void shouldNotBeEqualToDifferentType() {
+      final JwtToken token = new JwtToken("jti", "sub", 1000L, 2000L, null);
+
+      assertThat(token).isNotEqualTo("not a jwt token");
+    }
+  }
+
+  @Nested
+  @DisplayName("Hash code")
+  class HashCode {
+
+    @Test
+    @DisplayName("should have same hash code for equal objects")
+    void shouldHaveSameHashCodeForEqualObjects() {
+      final Map<String, Object> user = Map.of("id", "user-123");
+      final JwtToken token1 = new JwtToken("jti", "sub", 1000L, 2000L, user);
+      final JwtToken token2 = new JwtToken("jti", "sub", 1000L, 2000L, user);
+
+      assertThat(token1.hashCode()).isEqualTo(token2.hashCode());
+    }
+
+    @Test
+    @DisplayName("should have hash code for null user")
+    void shouldHaveHashCodeForNullUser() {
+      final JwtToken token = new JwtToken("jti", "sub", 1000L, 2000L, null);
+
+      assertThat(token.hashCode()).isNotZero();
+    }
+  }
+
+  @Nested
+  @DisplayName("String representation")
+  class StringRepresentation {
+
+    @Test
+    @DisplayName("should have non-empty toString")
+    void shouldHaveNonEmptyToString() {
+      final JwtToken token = new JwtToken("jti", "sub", 1000L, 2000L, Map.of("id", "123"));
+
+      final String toString = token.toString();
+
+      assertThat(toString).isNotNull().isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("toString should contain class name")
+    void toStringShouldContainClassName() {
+      final JwtToken token = new JwtToken("jti", "sub", 1000L, 2000L, null);
+
+      final String toString = token.toString();
+
+      assertThat(toString).contains("JwtToken");
+    }
+
+    @Test
+    @DisplayName("toString should contain field names or values")
+    void toStringShouldContainFieldNamesOrValues() {
+      final JwtToken token = new JwtToken("my-jti", "my-sub", 1000L, 2000L, null);
+
+      final String toString = token.toString();
+
+      assertThat(toString).containsAnyOf("jti", "sub", "my-jti", "my-sub");
+    }
+  }
+}

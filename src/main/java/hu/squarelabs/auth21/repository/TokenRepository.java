@@ -5,7 +5,9 @@ import java.time.Instant;
 import java.util.Iterator;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 
@@ -15,8 +17,9 @@ public class TokenRepository {
 
   public TokenRepository(
       DynamoDbEnhancedClient enhancedClient,
+      TableSchema<TokenEntity> tokenEntityTableSchema,
       @Value("${aws.dynamodb.table.tokens:auth-tokens}") String tableName) {
-    this.tokenTable = enhancedClient.table(tableName, TableSchema.fromBean(TokenEntity.class));
+    this.tokenTable = enhancedClient.table(tableName, tokenEntityTableSchema);
   }
 
   public void save(TokenEntity tokenEntity) {
@@ -29,24 +32,27 @@ public class TokenRepository {
     tokenTable.putItem(tokenEntity);
   }
 
-  public Optional<TokenEntity> findById(String jti) {
+  public Optional<TokenEntity> findById(String jti) throws ResponseStatusException {
     try {
       TokenEntity token = tokenTable.getItem(Key.builder().partitionValue(jti).build());
       return Optional.ofNullable(token);
     } catch (Exception e) {
-      throw new RuntimeException("Error finding token by jti: " + jti, e);
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Error finding token by jti: " + jti, e);
     }
   }
 
-  public void deleteById(String jti) {
+  public void deleteById(String jti) throws ResponseStatusException {
     try {
       tokenTable.deleteItem(Key.builder().partitionValue(jti).build());
     } catch (Exception e) {
-      throw new RuntimeException("Error deleting token: " + jti, e);
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting token: " + jti, e);
     }
   }
 
-  public Optional<TokenEntity> findByRefreshToken(String refreshToken) {
+  public Optional<TokenEntity> findByRefreshToken(String refreshToken)
+      throws ResponseStatusException {
     try {
       DynamoDbIndex<TokenEntity> refreshTokenIndex = tokenTable.index("RefreshTokenIndex");
       QueryEnhancedRequest queryRequest =
@@ -68,7 +74,8 @@ public class TokenRepository {
 
       return Optional.empty();
     } catch (Exception e) {
-      throw new RuntimeException("Error finding token by refresh token", e);
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Error finding token by refresh token", e);
     }
   }
 }

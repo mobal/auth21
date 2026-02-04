@@ -1,0 +1,70 @@
+FROM ghcr.io/graalvm/native-image:21-muslib AS builder
+
+WORKDIR /workspace
+
+COPY gradle gradle
+COPY gradlew gradlew
+COPY gradlew.bat gradlew.bat
+COPY build.gradle build.gradle
+COPY gradle.properties gradle.properties
+COPY settings.gradle settings.gradle
+COPY settings.gradle.kts settings.gradle.kts
+
+COPY src src
+
+RUN chmod +x gradlew && \
+    ./gradlew clean build -x test \
+    -Dorg.graalvm.native.build.user=builder
+
+RUN mkdir -p /workspace/extracted && \
+    cd /workspace/extracted && \
+    jar xf /workspace/build/libs/auth21-0.1.0-SNAPSHOT.jar
+
+FROM ghcr.io/graalvm/native-image:21-muslib AS native-builder
+
+WORKDIR /workspace
+
+COPY --from=builder /workspace/extracted /workspace/extracted
+
+COPY --from=builder /workspace/build /workspace/build
+COPY --from=builder /workspace/gradle /workspace/gradle
+COPY --from=builder /workspace/.gradle /workspace/.gradle
+COPY --from=builder /workspace/gradlew /workspace/gradlew
+COPY --from=builder /workspace/build.gradle /workspace/build.gradle
+
+RUN cd /workspace && \
+    native-image \
+    --class-path "extracted/BOOT-INF/classes:extracted/BOOT-INF/lib/*" \
+    --main-class org.springframework.boot.loader.JarLauncher \
+    -Dspring.native.mode=reflection \
+    -H:Name=auth21-app \
+    -H:+RemoveUnusedSymbols \
+    -H:+RemoveUnusedTypes \
+    -H:+RemoveUnusedFields \
+    -H:+RemoveUnusedMethods \
+    --enable-all-security-services \
+    --initialize-at-build-time=org.springframework.boot \
+    --initialize-at-run-time=java.sql.DriverManager
+
+FROM ubuntu:22.04
+
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=native-builder /workspace/auth21-app /app/auth21-app
+
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+USER appuser
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+EXPOSE 8080
+
+ENTRYPOINT ["/app/auth21-app"]
