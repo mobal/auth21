@@ -21,14 +21,20 @@ repositories {
 }
 
 configurations {
-    all {
+    configureEach {
         exclude group: 'ch.qos.logback', module: 'logback-classic'
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+    testImplementation {
+        exclude group: 'com.amazonaws.serverless', module: 'aws-serverless-java-container-springboot3'
+    }
+    testRuntimeClasspath {
+        exclude group: 'com.amazonaws.serverless', module: 'aws-serverless-java-container-springboot3'
     }
 }
 
 dependencies {
-    implementation 'com.amazonaws.serverless:aws-serverless-java-container-spring:2.1.5'
+    implementation 'com.amazonaws.serverless:aws-serverless-java-container-springboot3:2.1.5'
 
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
     implementation 'com.fasterxml.jackson.core:jackson-core'
@@ -132,3 +138,4 @@ sonar {
         property 'sonar.coverage.jacoco.xmlReportPaths', 'build/reports/jacoco/test/jacocoTestReport.xml'
     }
 }
+
